@@ -1,0 +1,25 @@
+<?xml version="1.0"?>
+<package >
+  <metadata>
+    <id>$id$</id>
+    <version>$version$</version>
+    <title>$title$</title>
+    <authors>$author$</authors>
+    <owners>$author$</owners>
+    <licenseUrl>https://github.com/dlmelendez/identitydocumentdb/wiki/License</licenseUrl>
+    <projectUrl>https://github.com/dlmelendez/identitydocumentdb</projectUrl>
+    <requireLicenseAcceptance>true</requireLicenseAcceptance>
+    <description>$description$</description>
+    <releaseNotes>
+      Release $version$ This project is an open source high performance plugin to ASP.NET Identity framework using Azure DocumentDB.
+      * Initial beta release.
+      * Requires an Azure DocumentDB instance with a Session Connection policy.
+    </releaseNotes>
+    <copyright>Copyright 2014</copyright>
+    <tags>ASP.NET Identity 2.0 Azure DocumentDB Storage MVC UserStore RoleStore UserManager</tags>
+    <dependencies>
+      <dependency id="Newtonsoft.Json" version="6.0.4" />
+      <dependency id="Microsoft.Azure.Documents.Client" version="0.9.0-preview" />
+    </dependencies>
+  </metadata>
+</package>
