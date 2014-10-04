@@ -13,6 +13,7 @@ using ElCamino.AspNet.Identity.DocumentDB.Helpers;
 using ElCamino.Web.Identity.DocumentDB.Tests.ModelTests;
 using Microsoft.Azure.Documents;
 using Newtonsoft.Json;
+using System.Text;
 
 namespace ElCamino.AspNet.Identity.DocumentDB.Tests
 {
@@ -221,6 +222,7 @@ namespace ElCamino.AspNet.Identity.DocumentDB.Tests
                     user = findUserTask2.Result;
                     WriteLineObject<IdentityUser>(user);
 
+                    TestContext.WriteLine("User Size in Bytes: {0}", Encoding.UTF8.GetByteCount(JsonConvert.SerializeObject(user)));
 
                     DateTime start = DateTime.UtcNow;
                     var taskUserDel = manager.DeleteAsync(user);
@@ -301,6 +303,8 @@ namespace ElCamino.AspNet.Identity.DocumentDB.Tests
                     var taskUser = manager.CreateAsync(user, DefaultUserPassword);
                     taskUser.Wait();
                     Assert.IsTrue(taskUser.Result.Succeeded, string.Concat(taskUser.Result.Errors));
+                    
+                    TestContext.WriteLine("User Size in Bytes: {0}", Encoding.UTF8.GetByteCount(JsonConvert.SerializeObject(user)));
 
                     var taskUserUpdate = manager.UpdateAsync(user);
                     taskUserUpdate.Wait();

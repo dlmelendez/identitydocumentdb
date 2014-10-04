@@ -100,7 +100,7 @@ namespace ElCamino.AspNet.Identity.DocumentDB.Model
 
         public virtual int AccessFailedCount { get; set; }
 
-        [JsonIgnore]
+        [JsonProperty("Claims", NullValueHandling= NullValueHandling.Ignore)]
         public ICollection<TClaim> Claims { get; private set; }
 
         public virtual string Email { get; set; }
@@ -128,7 +128,7 @@ namespace ElCamino.AspNet.Identity.DocumentDB.Model
 
         public virtual DateTime? LockoutEndDateUtc { get; set; }
 
-        [JsonIgnore]
+        [JsonProperty("Logins", NullValueHandling= NullValueHandling.Ignore)]
         public ICollection<TLogin> Logins { get; private set; }
 
         public virtual string PasswordHash { get; set; }
@@ -137,7 +137,7 @@ namespace ElCamino.AspNet.Identity.DocumentDB.Model
 
         public virtual bool PhoneNumberConfirmed { get; set; }
 
-        [JsonIgnore]
+        [JsonProperty("Roles", NullValueHandling = NullValueHandling.Ignore)]
         public ICollection<TRole> Roles { get; private set; }
 
         public virtual string SecurityStamp { get; set; }

@@ -51,8 +51,11 @@ namespace ElCamino.AspNet.Identity.DocumentDB.Model
     }
 
 
-    public class IdentityUserRole<TKey> : Resource
+    public class IdentityUserRole<TKey>
     {
+        [JsonProperty("id")]
+        public virtual string Id { get; set; }
+
         public virtual TKey RoleId { get; set; }
 
         public virtual TKey UserId { get; set; }

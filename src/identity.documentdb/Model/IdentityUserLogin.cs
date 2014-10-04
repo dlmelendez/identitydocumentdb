@@ -39,8 +39,11 @@ namespace ElCamino.AspNet.Identity.DocumentDB.Model
         public override string UserId { get; set; }
     }
 
-    public class IdentityUserLogin<TKey> : Resource
+    public class IdentityUserLogin<TKey> 
     {
+        [JsonProperty("id")]
+        public string Id { get; set; }
+
         public virtual string LoginProvider { get; set; }
 
         public virtual string ProviderKey { get; set; }

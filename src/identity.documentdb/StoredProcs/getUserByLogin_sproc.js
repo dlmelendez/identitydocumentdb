@@ -2,41 +2,18 @@
 
 /// <reference group="Generic" /> 
 /// <reference path="C:\Program Files (x86)\Microsoft Visual Studio 12.0\JavaScript\References\DocDbWrapperScript.js" /> 
+/// http://dl.windowsazure.com/documentDB/jsserverdocs/
 
-function getUserByLogin(loginid) {
+function getUserByLogin_v1(loginid) {
     var collection = getContext().getCollection();
-
-    var query = 'SELECT r.UserId FROM root r WHERE r.id = "' + loginid + '"';
-    var userId = '';
+    var query = 'SELECT VALUE r FROM root r JOIN l IN r.Logins WHERE l.id = "' + loginid + '"';
     //Get the Userid by LoginId
     var isEmailAccepted = collection.queryDocuments(
         collection.getSelfLink(),
         query,
         function (err, feed, options) {
             if (err) throw err;
-
-            if (!feed || !feed.length) {
-                getContext().getResponse().setBody(feed);
-            }
-            else {
-                userId = feed[0]["UserId"];
-                if (!userId || userId == '') {
-                    getContext().getResponse().setBody("[]");
-                    return;
-                }
-                else {
-                    //Query documents by UserId 
-                    var isAccepted = collection.queryDocuments(
-                        collection.getSelfLink(),
-                        'SELECT * FROM root r WHERE r.UserId = "' + userId + '"',
-                        function (err, feed, options) {
-                            if (err) throw err;
-                            getContext().getResponse().setBody(feed);
-                        });
-                }
-
-            }
+            getContext().getResponse().setBody(feed);
         });
 
-}
-
+    }

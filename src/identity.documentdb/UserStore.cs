@@ -102,19 +102,11 @@ namespace ElCamino.AspNet.Identity.DocumentDB
                     item.ClaimValue = claim.Value;
                     ((IGenerateKeys)item).GenerateKeys();
                     
-                    user.Claims.Add(item);
-
-                    var docTask = Context.Client.CreateDocumentAsync(Context.UserDocumentCollection.DocumentsLink, item
-                               , Context.RequestOptions, true);
-                    docTask.Wait();
-                    var doc = docTask.Result;
-                    Context.SetSessionTokenIfEmpty(doc.SessionToken);
-                    JsonConvert.PopulateObject(doc.Resource.ToString(), item);
-               
+                    user.Claims.Add(item);               
                 });
         }
 
-        public virtual Task AddLoginAsync(TUser user, UserLoginInfo login)
+        public async virtual Task AddLoginAsync(TUser user, UserLoginInfo login)
         {
             ThrowIfDisposed();
             if (user == null)
@@ -125,25 +117,19 @@ namespace ElCamino.AspNet.Identity.DocumentDB
             {
                 throw new ArgumentNullException("login");
             }
-            return new TaskFactory().StartNew(() =>
+            await new TaskFactory().StartNew(() =>
             {
                 TUserLogin item = Activator.CreateInstance<TUserLogin>();
                 item.UserId = user.Id;
                 item.ProviderKey = login.ProviderKey;
                 item.LoginProvider = login.LoginProvider;
                 ((IGenerateKeys)item).GenerateKeys();
-
-                var docTask = Context.Client.CreateDocumentAsync(Context.UserDocumentCollection.DocumentsLink, item
-                           , Context.RequestOptions, true);
-                docTask.Wait();
-                var doc = docTask.Result;
-                Context.SetSessionTokenIfEmpty(doc.SessionToken);
-                JsonConvert.PopulateObject(doc.Resource.ToString(), item);
+                user.Logins.Add(item);
             });
 
         }
 
-        public virtual Task AddToRoleAsync(TUser user, string roleName)
+        public async virtual Task AddToRoleAsync(TUser user, string roleName)
         {
             this.ThrowIfDisposed();
             if (user == null)
@@ -155,7 +141,7 @@ namespace ElCamino.AspNet.Identity.DocumentDB
                 throw new ArgumentException(IdentityResources.ValueCannotBeNullOrEmpty, "roleName");
             }
 
-            return new TaskFactory().StartNew(() =>
+            await new TaskFactory().StartNew(() =>
                 {
                     TRole roleT = Activator.CreateInstance<TRole>();
                     roleT.Name = roleName;
@@ -170,14 +156,7 @@ namespace ElCamino.AspNet.Identity.DocumentDB
                     ((IGenerateKeys)item).GenerateKeys();
 
                     user.Roles.Add(item);
-                    roleT.Users.Add(item);
 
-                    var docTask = Context.Client.CreateDocumentAsync(Context.UserDocumentCollection.DocumentsLink, item
-                               , Context.RequestOptions, true);
-                    docTask.Wait();
-                    var doc = docTask.Result;
-                    Context.SetSessionTokenIfEmpty(doc.SessionToken);
-                    JsonConvert.PopulateObject(doc.Resource.ToString(), item);
                 });
 
         }
@@ -211,30 +190,8 @@ namespace ElCamino.AspNet.Identity.DocumentDB
                 throw new ArgumentNullException("user");
             }
 
-            List<Task> tasks = new List<Task>(100);
-
-            tasks.Add(Context.Client.DeleteDocumentAsync(user.SelfLink,
-                            Context.RequestOptions));
-
-            foreach (var userLogin in user.Logins)
-            {
-                tasks.Add(Context.Client.DeleteDocumentAsync(userLogin.SelfLink,
-                            Context.RequestOptions));
-            }
-
-            foreach (var userRole in user.Roles)
-            {
-                tasks.Add(Context.Client.DeleteDocumentAsync(userRole.SelfLink,
-                            Context.RequestOptions));
-            }
-
-            foreach (var userClaim in user.Claims)
-            {
-                tasks.Add(Context.Client.DeleteDocumentAsync(userClaim.SelfLink,
-                            Context.RequestOptions));
-            }
-
-            await Task.WhenAll(tasks.ToArray());
+            await Context.Client.DeleteDocumentAsync(user.SelfLink,
+                            Context.RequestOptions);
 
         }
 
@@ -472,46 +429,6 @@ namespace ElCamino.AspNet.Identity.DocumentDB
                 user = Activator.CreateInstance<TUser>();
                 JsonConvert.PopulateObject(vUser.ToString(), user);
 
-                Task[] tasks = new Task[]
-                    { 
-                        new TaskFactory().StartNew(()=>
-                        {
-                            //Roles
-                            userResults.Where(u => u.id.ToString().StartsWith(Constants.RowKeyConstants.PreFixIdentityUserRole))
-                                .ToList()
-                                .ForEach(log =>
-                                {
-                                    TUserRole trole = Activator.CreateInstance<TUserRole>();
-                                    JsonConvert.PopulateObject(log.ToString(), trole);
-                                    user.Roles.Add(trole);
-                                });
-                        }),
-                        new TaskFactory().StartNew(()=>
-                        {
-                            //Claims
-                            userResults.Where(u => u.id.ToString().StartsWith(Constants.RowKeyConstants.PreFixIdentityUserClaim))
-                                .ToList()
-                                .ForEach(log =>
-                                {
-                                    TUserClaim tclaim = Activator.CreateInstance<TUserClaim>();
-                                    JsonConvert.PopulateObject(log.ToString(), tclaim);
-                                    user.Claims.Add(tclaim);
-                                });
-                            }),
-                        new TaskFactory().StartNew(()=>
-                        {
-                            //Logins
-                            userResults.Where(u => u.id.ToString().StartsWith(Constants.RowKeyConstants.PreFixIdentityUserLogin))
-                                .ToList()
-                                .ForEach(log =>
-                                {
-                                    TUserLogin tlogin = Activator.CreateInstance<TUserLogin>();
-                                    JsonConvert.PopulateObject(log.ToString(), tlogin);
-                                    user.Logins.Add(tlogin);
-                                });
-                         })
-                    };
-                Task.WaitAll(tasks);
             }
             return user;
         }
@@ -577,10 +494,6 @@ namespace ElCamino.AspNet.Identity.DocumentDB
                     TUserClaim local = user.Claims.FirstOrDefault(uc => uc.Id == KeyHelper.GenerateRowKeyIdentityUserClaim(claim.Type, claim.Value));
                     {
                         user.Claims.Remove(local);
-                        var delTask = Context.Client.DeleteDocumentAsync(local.SelfLink,
-                            Context.RequestOptions);
-                        delTask.Wait();
-                        Context.SetSessionTokenIfEmpty(delTask.Result.SessionToken);
                     }
 
                 });
@@ -604,10 +517,6 @@ namespace ElCamino.AspNet.Identity.DocumentDB
                 if (item != null)
                 {
                     user.Roles.Remove(item);
-                    var delTask = Context.Client.DeleteDocumentAsync(item.SelfLink,
-                        Context.RequestOptions);
-                    delTask.Wait();
-                    Context.SetSessionTokenIfEmpty(delTask.Result.SessionToken);
                 }
 
             });
@@ -630,10 +539,6 @@ namespace ElCamino.AspNet.Identity.DocumentDB
             if (item != null)
             {
                 user.Logins.Remove(item);
-                var delTask = Context.Client.DeleteDocumentAsync(item.SelfLink,
-                    Context.RequestOptions);
-                delTask.Wait();
-                Context.SetSessionTokenIfEmpty(delTask.Result.SessionToken);
             }
             return Task.FromResult<int>(0);
         }
@@ -835,14 +740,12 @@ namespace ElCamino.AspNet.Identity.DocumentDB
             {
                 throw new ArgumentNullException("user");
             }
-            await new TaskFactory().StartNew(() =>
-            {
-                var updTask = Context.Client.ReplaceDocumentAsync(user.SelfLink, user,
-                        Context.RequestOptions);
-                updTask.Wait();
-                Context.SetSessionTokenIfEmpty(updTask.Result.SessionToken);
-                JsonConvert.PopulateObject(updTask.Result.Resource.ToString(), user);
-            });
+            
+            var result = await Context.Client.ReplaceDocumentAsync(user.SelfLink, user,
+                    Context.RequestOptions);
+            Context.SetSessionTokenIfEmpty(result.SessionToken);
+            user = Activator.CreateInstance<TUser>();
+            JsonConvert.PopulateObject(result.Resource.ToString(), user);
 
         }
 

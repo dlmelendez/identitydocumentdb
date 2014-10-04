@@ -177,7 +177,7 @@ namespace ElCamino.AspNet.Identity.DocumentDB
             {
                 body = sr.ReadToEnd();
             }
-            string strId = "getUserByLogin";
+            string strId = "getUserByLogin_v1";
             _getUserByLoginSproc = _client.CreateStoredProcedureQuery(_userDocumentCollection.StoredProceduresLink,
                 new FeedOptions() { SessionToken = SessionToken }).Where(s => s.Id == strId).ToList().FirstOrDefault();
             //if (_getUserByLoginSproc != null)
@@ -210,7 +210,7 @@ namespace ElCamino.AspNet.Identity.DocumentDB
             {
                 body = sr.ReadToEnd();
             }
-            string strId = "getUserById";
+            string strId = "getUserById_v1";
             _getUserByIdSproc = _client.CreateStoredProcedureQuery(_userDocumentCollection.StoredProceduresLink,
                 new FeedOptions() { SessionToken = SessionToken }).Where(s => s.Id == strId).ToList().FirstOrDefault();
             //if (_getUserByIdSproc != null)
@@ -243,7 +243,7 @@ namespace ElCamino.AspNet.Identity.DocumentDB
             {
                 body = sr.ReadToEnd();
             }
-            string strId = "getUserByUserName";
+            string strId = "getUserByUserName_v1";
             _getUserByUserNameSproc = _client.CreateStoredProcedureQuery(_userDocumentCollection.StoredProceduresLink,
                 new FeedOptions() { SessionToken = SessionToken }).Where(s => s.Id == strId).ToList().FirstOrDefault();
             //if (_getUserByUserNameSproc != null)
@@ -276,7 +276,7 @@ namespace ElCamino.AspNet.Identity.DocumentDB
             {
                 body = sr.ReadToEnd();
             }
-            string strId = "getUserByEmail";
+            string strId = "getUserByEmail_v1";
             _getUserByEmailSproc = _client.CreateStoredProcedureQuery(_userDocumentCollection.StoredProceduresLink,
                 new FeedOptions() { SessionToken = SessionToken }).Where(s=> s.Id == strId).ToList().FirstOrDefault();
             //if (_getUserByEmailSproc != null)
