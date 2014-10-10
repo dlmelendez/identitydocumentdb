@@ -49,8 +49,9 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\packages\Antlr.3.5.0.2\lib\Antlr3.Runtime.dll</HintPath>
     </Reference>
-    <Reference Include="ElCamino.AspNet.Identity.DocumentDB">
-      <HintPath>..\packages\ElCamino.AspNet.Identity.DocumentDB.0.9.0-beta\lib\net45\ElCamino.AspNet.Identity.DocumentDB.dll</HintPath>
+    <Reference Include="ElCamino.AspNet.Identity.DocumentDB, Version=0.9.3.0, Culture=neutral, PublicKeyToken=8a83e5a7822753ac, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\packages\ElCamino.AspNet.Identity.DocumentDB.0.9.3-beta\lib\net45\ElCamino.AspNet.Identity.DocumentDB.dll</HintPath>
     </Reference>
     <Reference Include="Microsoft.AspNet.Identity.Core, Version=2.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
