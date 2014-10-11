@@ -1,0 +1,25 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 2013
+VisualStudioVersion = 12.0.30723.0
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MigrateIdentityData", "MigrateIdentityData.csproj", "{FCC7A312-221C-47A1-AC8A-D410E1B5820E}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+		Signed|Any CPU = Signed|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{FCC7A312-221C-47A1-AC8A-D410E1B5820E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FCC7A312-221C-47A1-AC8A-D410E1B5820E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FCC7A312-221C-47A1-AC8A-D410E1B5820E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FCC7A312-221C-47A1-AC8A-D410E1B5820E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{FCC7A312-221C-47A1-AC8A-D410E1B5820E}.Signed|Any CPU.ActiveCfg = Signed|Any CPU
+		{FCC7A312-221C-47A1-AC8A-D410E1B5820E}.Signed|Any CPU.Build.0 = Signed|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal
