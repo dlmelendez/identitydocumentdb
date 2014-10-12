@@ -13,7 +13,7 @@
     <releaseNotes>
       Release $version$ This project is an open source high performance plugin to ASP.NET Identity framework using Azure DocumentDB.
       * Updating the schema to work better with the updated 256KB request limit on DocumentDB.
-      ** Requires data migration to convert data from version 0.9.0-beta. Use available utility on project site https://github.com/dlmelendez/identitydocumentdb/releases/download/v0.9.3/MigrateIdentityData.0.9.3-beta.zip or the source at /utilities/MigrateIdentityData
+      ** Requires data migration from version 0.9.0-beta. Use available utility on project site https://github.com/dlmelendez/identitydocumentdb/releases/download/v0.9.3/MigrateIdentityData.0.9.3-beta.zip or the source at /utilities/MigrateIdentityData
     </releaseNotes>
     <copyright>Copyright 2014</copyright>
     <tags>ASP.NET Identity 2.0 Azure DocumentDB Storage MVC UserStore RoleStore UserManager</tags>
