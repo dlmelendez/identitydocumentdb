@@ -5,7 +5,7 @@ Azure DocumentDB Provider for ASP.NET Identity 2.0 framework. Get the latest rel
 
   Release 0.9.3-beta This project is an open source high performance plugin to ASP.NET Identity framework using Azure DocumentDB.
   * Updating the schema to work better with the updated 256KB request limit on DocumentDB. 
-  ** Requires data migration from version 0.9.0-beta. Use available utility on project site or the source at https://github.com/dlmelendez/identitydocumentdb/tree/master/utilities/MigrateIdentityData 
+  * Requires data migration from version 0.9.0-beta. Use available utility on project site https://github.com/dlmelendez/identitydocumentdb/releases/download/v0.9.3/MigrateIdentityData.0.9.3-beta.zip or the source at /utilities/MigrateIdentityData 
 
 ================================================================================================================================
 
