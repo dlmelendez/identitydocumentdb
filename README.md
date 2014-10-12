@@ -1,4 +1,4 @@
-identitydocumentdb
+ElCamino.AspNet.Identity.DocumentDB
 ==================
 
 Azure DocumentDB Provider for ASP.NET Identity 2.0 framework. Get the latest release from NuGet http://www.nuget.org/packages/ElCamino.AspNet.Identity.DocumentDB/)
