@@ -292,7 +292,7 @@ namespace ElCamino.AspNet.Identity.DocumentDB.Tests
 
         [TestMethod]
         [TestCategory("Identity.Azure.UserStore")]
-        public void UpdateUser()
+        public async void UpdateUser()
         {
             using (UserStore<IdentityUser> store = new UserStore<IdentityUser>())
             {
@@ -312,7 +312,7 @@ namespace ElCamino.AspNet.Identity.DocumentDB.Tests
 
                     try
                     {
-                        store.UpdateAsync(null);
+                        await store.UpdateAsync(null);
                     }
                     catch (ArgumentException) { }
                 }
@@ -321,7 +321,7 @@ namespace ElCamino.AspNet.Identity.DocumentDB.Tests
 
         [TestMethod]
         [TestCategory("Identity.Azure.UserStore")]
-        public void ChangeUserName()
+        public async void ChangeUserName()
         {
             using (UserStore<IdentityUser> store = new UserStore<IdentityUser>())
             {
@@ -376,7 +376,7 @@ namespace ElCamino.AspNet.Identity.DocumentDB.Tests
 
                     try
                     {
-                        store.UpdateAsync(null);
+                        await store.UpdateAsync(null);
                     }
                     catch (ArgumentException) { }
                 }
@@ -480,7 +480,7 @@ namespace ElCamino.AspNet.Identity.DocumentDB.Tests
 
         [TestMethod]
         [TestCategory("Identity.Azure.UserStore")]
-        public void AddRemoveUserLogin()
+        public async void AddRemoveUserLogin()
         {
             using (UserStore<IdentityUser> store = new UserStore<IdentityUser>())
             {
@@ -528,37 +528,37 @@ namespace ElCamino.AspNet.Identity.DocumentDB.Tests
 
                     try
                     {
-                        store.AddLoginAsync(null, loginInfo);
+                        await store.AddLoginAsync(null, loginInfo);
                     }
                     catch (ArgumentException) { }
 
                     try
                     {
-                        store.AddLoginAsync(user, null);
+                        await store.AddLoginAsync(user, null);
                     }
                     catch (ArgumentException) { }
 
                     try
                     {
-                        store.RemoveLoginAsync(null, loginInfo);
+                        await store.RemoveLoginAsync(null, loginInfo);
                     }
                     catch (ArgumentException) { }
 
                     try
                     {
-                        store.RemoveLoginAsync(user, null);
+                        await store.RemoveLoginAsync(user, null);
                     }
                     catch (ArgumentException) { }
 
                     try
                     {
-                        store.FindAsync(null);
+                        await store.FindAsync(null);
                     }
                     catch (ArgumentException) { }
 
                     try
                     {
-                        store.GetLoginsAsync(null);
+                        await store.GetLoginsAsync(null);
                     }
                     catch (ArgumentException) { }
                 }
@@ -606,7 +606,7 @@ namespace ElCamino.AspNet.Identity.DocumentDB.Tests
 
         [TestMethod]
         [TestCategory("Identity.Azure.UserStore")]
-        public void AddRemoveUserRole()
+        public async void AddRemoveUserRole()
         {
             string roleName = string.Format("{0}_{1}", Constants.AccountRoles.AccountTestAdminRole, Guid.NewGuid().ToString("N"));
 
@@ -644,37 +644,37 @@ namespace ElCamino.AspNet.Identity.DocumentDB.Tests
 
                     try
                     {
-                        store.AddToRoleAsync(null, roleName);
+                        await store.AddToRoleAsync(null, roleName);
                     }
                     catch (ArgumentException) { }
 
                     try
                     {
-                        store.AddToRoleAsync(user, null);
+                        await store.AddToRoleAsync(user, null);
                     }
                     catch (ArgumentException) { }
 
                     try
                     {
-                        store.AddToRoleAsync(user, Guid.NewGuid().ToString());
+                        await store.AddToRoleAsync(user, Guid.NewGuid().ToString());
                     }
                     catch (ArgumentException) { }
 
                     try
                     {
-                        store.RemoveFromRoleAsync(null, roleName);
+                        await store.RemoveFromRoleAsync(null, roleName);
                     }
                     catch (ArgumentException) { }
 
                     try
                     {
-                        store.RemoveFromRoleAsync(user, null);
+                        await store.RemoveFromRoleAsync(user, null);
                     }
                     catch (ArgumentException) { }
 
                     try
                     {
-                        store.GetRolesAsync(null);
+                        await store.GetRolesAsync(null);
                     }
                     catch (ArgumentException) { }
 

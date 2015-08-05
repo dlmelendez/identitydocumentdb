@@ -13,23 +13,27 @@ using System.Configuration;
 using System.Diagnostics;
 using System.Reflection;
 using System.IO;
+using System.Collections.ObjectModel;
 
 namespace ElCamino.AspNet.Identity.DocumentDB
 {
     public class IdentityCloudContext : IdentityCloudContext<IdentityUser, IdentityRole, string, IdentityUserLogin, IdentityUserRole, IdentityUserClaim>
     {
         public IdentityCloudContext()
-            : base() { }
+            : base()
+        { }
 
         public IdentityCloudContext(string uri, string authKey, string database, ConnectionPolicy policy = null)
-            : base(uri, authKey, database, policy) { }
+            : base(uri, authKey, database, policy)
+        { }
 
     }
 
     public class IdentityCloudContext<TUser> : IdentityCloudContext<TUser, IdentityRole, string, IdentityUserLogin, IdentityUserRole, IdentityUserClaim> where TUser : IdentityUser
     {
         public IdentityCloudContext()
-            : base() { }
+            : base()
+        { }
 
         public IdentityCloudContext(string uri, string authKey, string database, ConnectionPolicy policy = null)
             : base(uri, authKey, database, policy)
@@ -79,7 +83,7 @@ namespace ElCamino.AspNet.Identity.DocumentDB
         public IdentityCloudContext() :
             this(ConfigurationManager.AppSettings[Constants.AppSettingsKeys.DatabaseUriKey].ToString(),
             ConfigurationManager.AppSettings[Constants.AppSettingsKeys.DatabaseAuthKey].ToString(),
-            ConfigurationManager.AppSettings[Constants.AppSettingsKeys.DatabaseNameKey].ToString(), 
+            ConfigurationManager.AppSettings[Constants.AppSettingsKeys.DatabaseNameKey].ToString(),
             null)
         {
 
@@ -98,10 +102,10 @@ namespace ElCamino.AspNet.Identity.DocumentDB
             _db = _client.CreateDatabaseQuery().Where(d => d.Id == database).ToList().FirstOrDefault();
             if (_db == null)
             {
-                var task = _client.CreateDatabaseAsync( new Database {Id = database});
+                var task = _client.CreateDatabaseAsync(new Database { Id = database });
                 task.Wait();
                 _db = task.Result;
-            }         
+            }
         }
 
         private void InitCollections()
@@ -116,25 +120,37 @@ namespace ElCamino.AspNet.Identity.DocumentDB
                     if (uc == null)
                     {
                         _userDocumentCollection.IndexingPolicy.IndexingMode = IndexingMode.Lazy;
-                        _userDocumentCollection.IndexingPolicy.IncludedPaths.Add(new IndexingPath()
+                        _userDocumentCollection.IndexingPolicy.IncludedPaths.Add(new IncludedPath()
                         {
-                            IndexType = IndexType.Hash,
-                            Path = @"/",
+                             Path = @"/",
+                             Indexes= new Collection<Index>
+                             {
+                                 new HashIndex(DataType.String)
+                             }
                         });
-                        _userDocumentCollection.IndexingPolicy.IncludedPaths.Add(new IndexingPath()
+                        _userDocumentCollection.IndexingPolicy.IncludedPaths.Add(new IncludedPath()
                         {
-                            IndexType = IndexType.Hash,
                             Path = @"/""Email""/?",
+                             Indexes= new Collection<Index>
+                             {
+                                 new HashIndex(DataType.String)
+                             }
                         });
-                        _userDocumentCollection.IndexingPolicy.IncludedPaths.Add(new IndexingPath()
+                        _userDocumentCollection.IndexingPolicy.IncludedPaths.Add(new IncludedPath()
                         {
-                            IndexType = IndexType.Hash,
-                            Path = @"/""UserName""/?",
+                             Path = @"/""UserName""/?",
+                             Indexes= new Collection<Index>
+                             {
+                                 new HashIndex(DataType.String)
+                             }
                         });
-                        _userDocumentCollection.IndexingPolicy.IncludedPaths.Add(new IndexingPath()
+                        _userDocumentCollection.IndexingPolicy.IncludedPaths.Add(new IncludedPath()
                         {
-                            IndexType = IndexType.Hash,
                             Path = @"/""UserId""/?",
+                             Indexes= new Collection<Index>
+                             {
+                                 new HashIndex(DataType.String)
+                             }
                         });
                         var ucTask = _client.CreateDocumentCollectionAsync(_db.SelfLink, _userDocumentCollection);
                         ucTask.Wait();
@@ -278,7 +294,7 @@ namespace ElCamino.AspNet.Identity.DocumentDB
             }
             string strId = "getUserByEmail_v1";
             _getUserByEmailSproc = _client.CreateStoredProcedureQuery(_userDocumentCollection.StoredProceduresLink,
-                new FeedOptions() { SessionToken = SessionToken }).Where(s=> s.Id == strId).ToList().FirstOrDefault();
+                new FeedOptions() { SessionToken = SessionToken }).Where(s => s.Id == strId).ToList().FirstOrDefault();
             //if (_getUserByEmailSproc != null)
             //{
             //    var task = _client.DeleteStoredProcedureAsync(_getUserByEmailSproc.SelfLink,
@@ -318,13 +334,13 @@ namespace ElCamino.AspNet.Identity.DocumentDB
 
         public RequestOptions RequestOptions
         {
-            get 
-            { 
-                return new RequestOptions() 
-                { 
+            get
+            {
+                return new RequestOptions()
+                {
                     ConsistencyLevel = ConsistencyLevel.Session,
                     SessionToken = SessionToken
-                }; 
+                };
             }
         }
 
@@ -335,7 +351,7 @@ namespace ElCamino.AspNet.Identity.DocumentDB
 
         public void SetSessionTokenIfEmpty(string tokenNew)
         {
-            if(string.IsNullOrWhiteSpace(_sessionToken))
+            if (string.IsNullOrWhiteSpace(_sessionToken))
             {
                 _sessionToken = tokenNew;
             }
