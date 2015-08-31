@@ -69,21 +69,7 @@ namespace ElCamino.AspNet.Identity.DocumentDB
                     new FeedOptions() { SessionToken = Context.SessionToken });
         }
 
-        //public async Task CreateTablesIfNotExists()
-        //{
-        //    await new TaskFactory().StartNew(() =>
-        //    {
-        //        Task<bool>[] tasks = new Task<bool>[] 
-        //            { 
-        //                Context.RoleTable.CreateIfNotExistsAsync(),
-        //                Context.UserTable.CreateIfNotExistsAsync(),
-        //                Context.IndexTable.CreateIfNotExistsAsync(),
-        //            };
-        //        Task.WaitAll(tasks);
-        //    });
-        //}
-
-        public virtual Task AddClaimAsync(TUser user, Claim claim)
+        public virtual async Task AddClaimAsync(TUser user, Claim claim)
         {
             ThrowIfDisposed();
             if (user == null)
@@ -94,7 +80,7 @@ namespace ElCamino.AspNet.Identity.DocumentDB
             {
                 throw new ArgumentNullException("claim");
             }
-            return new TaskFactory().StartNew(() =>
+            await Task.Run(() =>
                 {
                     TUserClaim item = Activator.CreateInstance<TUserClaim>();
                     item.UserId = user.Id;
@@ -117,7 +103,7 @@ namespace ElCamino.AspNet.Identity.DocumentDB
             {
                 throw new ArgumentNullException("login");
             }
-            await new TaskFactory().StartNew(() =>
+            await Task.Run(() =>
             {
                 TUserLogin item = Activator.CreateInstance<TUserLogin>();
                 item.UserId = user.Id;
@@ -141,7 +127,7 @@ namespace ElCamino.AspNet.Identity.DocumentDB
                 throw new ArgumentException(IdentityResources.ValueCannotBeNullOrEmpty, "roleName");
             }
 
-            await new TaskFactory().StartNew(() =>
+            await Task.Run(() =>
                 {
                     TRole roleT = Activator.CreateInstance<TRole>();
                     roleT.Name = roleName;
@@ -170,15 +156,10 @@ namespace ElCamino.AspNet.Identity.DocumentDB
             }
             ((IGenerateKeys)user).GenerateKeys();
 
-            await new TaskFactory().StartNew(() =>
-            {
-                var docTask = Context.Client.CreateDocumentAsync(Context.UserDocumentCollection.DocumentsLink, user
-                    , Context.RequestOptions, true);
-                docTask.Wait();
-                var doc = docTask.Result;
-                Context.SetSessionTokenIfEmpty(doc.SessionToken);
-                JsonConvert.PopulateObject(doc.Resource.ToString(), user);
-            });
+            var doc = await Context.Client.CreateDocumentAsync(Context.UserDocumentCollection.DocumentsLink, user
+                , Context.RequestOptions, true);
+            Context.SetSessionTokenIfEmpty(doc.SessionToken);
+            JsonConvert.PopulateObject(doc.Resource.ToString(), user);
 
         }
 
@@ -192,13 +173,11 @@ namespace ElCamino.AspNet.Identity.DocumentDB
 
             await Context.Client.DeleteDocumentAsync(user.SelfLink,
                             Context.RequestOptions);
-
         }
 
         public void Dispose()
         {
             this.Dispose(true);
-            GC.SuppressFinalize(this);
         }
 
         protected virtual void Dispose(bool disposing)
@@ -225,12 +204,12 @@ namespace ElCamino.AspNet.Identity.DocumentDB
 
             string loginId = login.GenerateRowKeyUserLoginInfo();
 
-            var task = Context.Client.ExecuteStoredProcedureAsync<IEnumerable<dynamic>>(Context.GetUserByLoginSproc.SelfLink,
+            var result = await Context.Client.ExecuteStoredProcedureAsync<IEnumerable<dynamic>>(Context.GetUserByLoginSproc.SelfLink,
                     new dynamic[] { loginId });
-            task.Wait();
-            if (task.Result.Response != null)
+            if (result.Response != null)
             {
-                return await Task.FromResult<TUser>(GetUserAggregate(task.Result.Response.ToList()));
+                Context.SetSessionTokenIfEmpty(result.SessionToken);
+                return GetUserAggregate(result.Response.ToList());
             }
             return null;
 
@@ -238,38 +217,32 @@ namespace ElCamino.AspNet.Identity.DocumentDB
 
         public async Task<TUser> FindByEmailAsync(string plainEmail)
         {
-            var task = Context.Client.ExecuteStoredProcedureAsync<IEnumerable<dynamic>>(Context.GetUserByEmailSproc.SelfLink,
+            var result = await Context.Client.ExecuteStoredProcedureAsync<IEnumerable<dynamic>>(Context.GetUserByEmailSproc.SelfLink,
                new dynamic[] { plainEmail });
-            task.Wait();
-            if (task.Result.Response != null)
+
+            if (result.Response != null)
             {
-                return await Task.FromResult<TUser>(GetUserAggregate(task.Result.Response.ToList()));
+                Context.SetSessionTokenIfEmpty(result.SessionToken);
+                return GetUserAggregate(result.Response.ToList());
             }
             return null;
         }
 
-        public virtual Task<TUser> FindByIdAsync(TKey userId)
+        public virtual async Task<TUser> FindByIdAsync(TKey userId)
         {
             this.ThrowIfDisposed();
-            return FindByIdAsync(userId.ToString());
+            return await this.GetUserAggregateAsync(userId.ToString());
         }
-
-        private Task<TUser> FindByIdAsync(string userId)
-        {
-            this.ThrowIfDisposed();
-            return this.GetUserAggregateAsync(userId);
-        }
-
 
         public async virtual Task<TUser> FindByNameAsync(string userName)
         {
             this.ThrowIfDisposed();
-            var task = Context.Client.ExecuteStoredProcedureAsync<IEnumerable<dynamic>>(Context.GetUserByUserNameSproc.SelfLink,
+            var result = await Context.Client.ExecuteStoredProcedureAsync<IEnumerable<dynamic>>(Context.GetUserByUserNameSproc.SelfLink,
                     new dynamic[] { userName });
-            task.Wait();
-            if (task.Result.Response != null)
+            if (result.Response != null)
             {
-                return await Task.FromResult<TUser>(GetUserAggregate(task.Result.Response.ToList()));
+                Context.SetSessionTokenIfEmpty(result.SessionToken);
+                return await Task.FromResult<TUser>(GetUserAggregate(result.Response.ToList()));
             }
             return null;
         }
@@ -662,75 +635,6 @@ namespace ElCamino.AspNet.Identity.DocumentDB
                 throw new ObjectDisposedException(base.GetType().Name);
             }
         }
-
-        //private TUser ChangeUserName(TUser user)
-        //{
-        //    List<Task> taskList = new List<Task>(50);
-        //    string userNameKey = KeyHelper.GenerateRowKeyUserName(user.UserName);
-            
-        //    Debug.WriteLine("Old User.Id: {0}", user.Id);
-        //    Debug.WriteLine(string.Format("New User.Id: {0}", KeyHelper.GenerateRowKeyUserName(user.UserName)));
-        //    //Get the old user
-        //    var userRows = GetUserAggregateQuery(user.Id.ToString()).ToList();
-        //    //Insert the new user name rows
-        //    BatchOperationHelper insertBatchHelper = new BatchOperationHelper();
-        //    foreach (DynamicTableEntity oldUserRow in userRows)
-        //    {
-        //        ITableEntity dte = null;
-        //        if (oldUserRow.RowKey == user.Id.ToString())
-        //        {
-        //            IGenerateKeys ikey = (IGenerateKeys)user;
-        //            ikey.GenerateKeys();
-        //            dte = user;
-        //        }
-        //        else
-        //        {
-        //            dte = new DynamicTableEntity(userNameKey, oldUserRow.RowKey,
-        //                Constants.ETagWildcard,
-        //                oldUserRow.Properties);
-        //        }
-        //        insertBatchHelper.Add(TableOperation.Insert(dte));
-        //    }
-        //    taskList.Add(insertBatchHelper.ExecuteBatchAsync(_userTable));
-        //    //Delete the old user
-        //    BatchOperationHelper deleteBatchHelper = new BatchOperationHelper();
-        //    foreach (DynamicTableEntity delUserRow in userRows)
-        //    {
-        //        deleteBatchHelper.Add(TableOperation.Delete(delUserRow));
-        //    }
-        //    taskList.Add(deleteBatchHelper.ExecuteBatchAsync(_userTable));
-
-        //    // Create the new email index
-        //    if (!string.IsNullOrWhiteSpace(user.Email))
-        //    {
-        //        IdentityUserIndex indexEmail = CreateEmailIndex(userNameKey, user.Email);
-
-        //        taskList.Add(_indexTable.ExecuteAsync(TableOperation.InsertOrReplace(indexEmail)));
-        //    }
-
-        //    // Update the external logins
-        //    foreach (var login in user.Logins)
-        //    {
-        //        IdentityUserIndex indexLogin = CreateLoginIndex(userNameKey, login);
-        //        taskList.Add(_indexTable.ExecuteAsync(TableOperation.InsertOrReplace(indexLogin)));
-        //        login.PartitionKey = userNameKey;
-        //    }
-
-        //    // Update the claims partitionkeys
-        //    foreach (var claim in user.Claims)
-        //    {
-        //        claim.PartitionKey = userNameKey;
-        //    }
-
-        //    // Update the roles partitionkeys
-        //    foreach (var role in user.Roles)
-        //    {
-        //        role.PartitionKey = userNameKey;
-        //    }
-
-        //    Task.WaitAll(taskList.ToArray());
-        //    return user;
-        //}
 
 
         public async virtual Task UpdateAsync(TUser user)

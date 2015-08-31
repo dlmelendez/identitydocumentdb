@@ -9,6 +9,7 @@ using System.Diagnostics;
 using Microsoft.Azure.Documents.Linq;
 using System.Linq;
 using System.Threading;
+using System.Configuration;
 
 namespace ElCamino.AspNet.Identity.DocumentDB.Tests
 {
@@ -227,7 +228,11 @@ namespace ElCamino.AspNet.Identity.DocumentDB.Tests
         [TestCategory("Identity.Azure.RoleStore")]
         public void FindRoleById()
         {
-            using (RoleStore<IdentityRole> store = new RoleStore<IdentityRole>())
+            using (RoleStore<IdentityRole> store = new RoleStore<IdentityRole>(new IdentityCloudContext(
+                ConfigurationManager.AppSettings[ElCamino.AspNet.Identity.DocumentDB.Constants.AppSettingsKeys.DatabaseUriKey].ToString(),
+            ConfigurationManager.AppSettings[ElCamino.AspNet.Identity.DocumentDB.Constants.AppSettingsKeys.DatabaseAuthKey].ToString(),
+            ConfigurationManager.AppSettings[ElCamino.AspNet.Identity.DocumentDB.Constants.AppSettingsKeys.DatabaseNameKey].ToString(),
+            null)))
             {
                 using (RoleManager<IdentityRole> manager = new RoleManager<IdentityRole>(store))
                 {

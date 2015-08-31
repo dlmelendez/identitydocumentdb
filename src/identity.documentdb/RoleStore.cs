@@ -60,15 +60,10 @@ namespace ElCamino.AspNet.Identity.DocumentDB
             }
 
             ((IGenerateKeys)role).GenerateKeys();
-            await new TaskFactory().StartNew(() =>
-                {
-                    var docTask = Context.Client.CreateDocumentAsync(Context.RoleDocumentCollection.DocumentsLink, role
-                               , Context.RequestOptions, true);
-                    docTask.Wait();
-                    var doc = docTask.Result;
-                    Context.SetSessionTokenIfEmpty(doc.SessionToken);
-                    JsonConvert.PopulateObject(doc.Resource.ToString(), role);
-                });
+            var doc = await Context.Client.CreateDocumentAsync(Context.RoleDocumentCollection.DocumentsLink, role
+                        , Context.RequestOptions, true);
+            Context.SetSessionTokenIfEmpty(doc.SessionToken);
+            JsonConvert.PopulateObject(doc.Resource.ToString(), role);
         }
 
         public async virtual Task DeleteAsync(TRole role)
@@ -78,21 +73,15 @@ namespace ElCamino.AspNet.Identity.DocumentDB
             {
                 throw new ArgumentNullException("role");
             }
-            await new TaskFactory().StartNew(() =>
-                {
-                    var docTask =  Context.Client.DeleteDocumentAsync(role.SelfLink,
-                            Context.RequestOptions);
-                    docTask.Wait();
-                    var doc = docTask.Result;
-                    Context.SetSessionTokenIfEmpty(doc.SessionToken);
-                });
+            var doc = await Context.Client.DeleteDocumentAsync(role.SelfLink,
+                    Context.RequestOptions);
+            Context.SetSessionTokenIfEmpty(doc.SessionToken);
 
         }
 
         public void Dispose()
         {
             this.Dispose(true);
-            GC.SuppressFinalize(this);
         }
 
         protected virtual void Dispose(bool disposing)
@@ -109,35 +98,32 @@ namespace ElCamino.AspNet.Identity.DocumentDB
             }
         }
 
-        public Task<TRole> FindByIdAsync(TKey roleId)
+        public async Task<TRole> FindByIdAsync(TKey roleId)
         {
             this.ThrowIfDisposed();
             string key = roleId.ToString();
-            return Task.FromResult<TRole>(FindById(key));
+            return await Task.FromResult<TRole>(FindById(key));
         }
 
-        public Task<TRole> FindByNameAsync(string roleName)
+        public async Task<TRole> FindByNameAsync(string roleName)
         {
             this.ThrowIfDisposed();
             string key = KeyHelper.GenerateRowKeyIdentityRole(roleName);
-            return Task.FromResult<TRole>(FindById(key));
+            return await Task.FromResult(FindById(key));
         }
 
         private TRole FindById(string roleKeyString)
         {
-            var doc = Context.Client.CreateDocumentQuery(Context.RoleDocumentCollection.DocumentsLink
-                , new Microsoft.Azure.Documents.Client.FeedOptions() { SessionToken = Context.SessionToken, MaxItemCount = 1 })
-                .Where(d => d.Id == roleKeyString)
-                .Select(s => s)
-                .ToList()
-                .FirstOrDefault();
+            SqlQuerySpec query = new SqlQuerySpec("SELECT * FROM Roles r WHERE (r.id = @id)", new SqlParameterCollection(){
+             new SqlParameter("@id", roleKeyString)
+            });
 
-            TRole role = null;
+            var doc = Context.Client.CreateDocumentQuery(Context.RoleDocumentCollection.DocumentsLink,
+                query, new Microsoft.Azure.Documents.Client.FeedOptions() { SessionToken = Context.SessionToken, MaxItemCount = 1 })
+            .ToList()
+            .FirstOrDefault();
 
-            if (doc != null)
-            {
-                role = JsonConvert.DeserializeObject<TRole>(doc.ToString());
-            }
+            TRole role = doc;
             return role;
         }
 
@@ -159,13 +145,9 @@ namespace ElCamino.AspNet.Identity.DocumentDB
         
             if (!KeyHelper.GenerateRowKeyIdentityRole(role.Name).Equals(role.Id.ToString(), StringComparison.Ordinal))
             {
-                await new TaskFactory().StartNew(() =>
-                    {
-                        var delTask = Context.Client.DeleteDocumentAsync(role.SelfLink, Context.RequestOptions);
-                        delTask.Wait();
-                        Context.SetSessionTokenIfEmpty(delTask.Result.SessionToken);
-                        CreateAsync(role).Wait();
-                    });
+                var resourceDoc = await Context.Client.DeleteDocumentAsync(role.SelfLink, Context.RequestOptions);
+                Context.SetSessionTokenIfEmpty(resourceDoc.SessionToken);
+                await CreateAsync(role);
             }
 
         }
