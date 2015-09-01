@@ -18,7 +18,7 @@ using System.Runtime.InteropServices;
 [assembly: Guid("29B22384-59C4-40E9-B59F-346666629742")]
 
 //http://semver.org/
-[assembly: AssemblyVersion("1.0.0.0")]
-[assembly: AssemblyFileVersion("1.0.0.0")]
-[assembly: AssemblyInformationalVersion("1.0.0.0")]
+[assembly: AssemblyVersion("1.1.0.0")]
+[assembly: AssemblyFileVersion("1.1.0.0")]
+[assembly: AssemblyInformationalVersion("1.1.0.0")]
 

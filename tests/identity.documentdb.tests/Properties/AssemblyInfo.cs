@@ -18,6 +18,6 @@ using System.Runtime.InteropServices;
 [assembly: Guid("B50C24F2-2BD4-42EC-87C8-D8BDEBB1097E")]
 
 //http://semver.org/
-[assembly: AssemblyVersion("1.0.0.0")]
-[assembly: AssemblyFileVersion("1.0.0.0")]
-[assembly: AssemblyInformationalVersion("1.0.0.0")]
+[assembly: AssemblyVersion("1.1.0.0")]
+[assembly: AssemblyFileVersion("1.1.0.0")]
+[assembly: AssemblyInformationalVersion("1.1.0.0")]
