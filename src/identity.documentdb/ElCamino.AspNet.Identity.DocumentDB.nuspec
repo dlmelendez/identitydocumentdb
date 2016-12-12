@@ -12,14 +12,13 @@
     <description>$description$</description>
     <releaseNotes>
       Release $version$ This project is an open source plugin to ASP.NET Identity framework using Azure DocumentDB.
-      * Release 1.1
-      ** Optimized threading and deserialization.
+      * Updating references.
     </releaseNotes>
-    <copyright>Copyright 2015</copyright>
+    <copyright>Copyright 2016</copyright>
     <tags>ASP.NET Identity 2.0 Azure DocumentDB Storage MVC UserStore RoleStore UserManager</tags>
     <dependencies>
-      <dependency id="Newtonsoft.Json" version="7.0.1" />
-      <dependency id="Microsoft.Azure.DocumentDB" version="1.4.0" />
+      <dependency id="Newtonsoft.Json" version="9.0.1" />
+      <dependency id="Microsoft.Azure.DocumentDB" version="1.11.0" />
     </dependencies>
   </metadata>
 </package>

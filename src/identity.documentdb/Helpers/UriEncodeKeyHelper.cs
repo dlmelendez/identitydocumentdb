@@ -57,7 +57,7 @@ namespace ElCamino.AspNet.Identity.DocumentDB.Helpers
 
         public override double KeyVersion
         {
-            get { return 1.0; }
+            get { return 1.2; }
         }
     }
 }

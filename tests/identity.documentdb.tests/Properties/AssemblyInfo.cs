@@ -10,7 +10,7 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("Author: David Melendez")]
 [assembly: AssemblyProduct("Azure DocumentDB Provider Tests")]
-[assembly: AssemblyCopyright("Copyright ©  2014 David Melendez, MIT License")]
+[assembly: AssemblyCopyright("Copyright ©  2016 David Melendez, MIT License")]
 [assembly: AssemblyTrademark("")]
 [assembly: NeutralResourcesLanguage("en-US")]
 
@@ -18,6 +18,6 @@ using System.Runtime.InteropServices;
 [assembly: Guid("B50C24F2-2BD4-42EC-87C8-D8BDEBB1097E")]
 
 //http://semver.org/
-[assembly: AssemblyVersion("1.1.0.0")]
-[assembly: AssemblyFileVersion("1.1.0.0")]
-[assembly: AssemblyInformationalVersion("1.1.0.0")]
+[assembly: AssemblyVersion("1.2.0.0")]
+[assembly: AssemblyFileVersion("1.2.0.0")]
+[assembly: AssemblyInformationalVersion("1.2.0.0")]

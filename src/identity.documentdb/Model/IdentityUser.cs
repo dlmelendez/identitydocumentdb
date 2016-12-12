@@ -107,7 +107,7 @@ namespace ElCamino.AspNet.Identity.DocumentDB.Model
 
         public virtual bool EmailConfirmed { get; set; }
 
-        public virtual TKey Id
+        public new virtual TKey Id
         {
             get { return _id; }
             set
