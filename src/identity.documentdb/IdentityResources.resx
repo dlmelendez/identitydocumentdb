@@ -1,7 +1,7 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <root>
   <!-- 
-    MIT License Copyright 2014 (c) David Melendez. All rights reserved. See License.txt in the project root for license information.
+    MIT License Copyright 2017 (c) David Melendez. All rights reserved. See License.txt in the project root for license information.
     -->
   <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
     <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />

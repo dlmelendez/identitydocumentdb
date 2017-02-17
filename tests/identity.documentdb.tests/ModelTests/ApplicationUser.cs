@@ -1,4 +1,6 @@
-﻿using ElCamino.AspNet.Identity.DocumentDB.Model;
+﻿// MIT License Copyright 2017 (c) David Melendez. All rights reserved. See License.txt in the project root for license information.
+
+using ElCamino.AspNet.Identity.DocumentDB.Model;
 using System;
 using System.Collections.Generic;
 using System.Linq;
