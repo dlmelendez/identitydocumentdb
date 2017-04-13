@@ -23,6 +23,13 @@ namespace ElCamino.AspNet.Identity.DocumentDB
             : base(uri, authKey, database, policy)
         { }
 
+        public IdentityCloudContext(string usersCollectionName, string rolesCollectionName)
+            : base(usersCollectionName, rolesCollectionName)
+        { }
+
+        public IdentityCloudContext(string uri, string authKey, string database, ConnectionPolicy policy, string usersCollectionName, string rolesCollectionName)
+            : base(uri, authKey, database, policy, usersCollectionName, rolesCollectionName)
+        { }
     }
 
     public class IdentityCloudContext<TUser> : IdentityCloudContext<TUser, IdentityRole, string, IdentityUserLogin, IdentityUserRole, IdentityUserClaim> where TUser : IdentityUser
@@ -33,8 +40,15 @@ namespace ElCamino.AspNet.Identity.DocumentDB
 
         public IdentityCloudContext(string uri, string authKey, string database, ConnectionPolicy policy = null)
             : base(uri, authKey, database, policy)
-        {
-        }
+        { }
+
+        public IdentityCloudContext(string usersCollectionName, string rolesCollectionName)
+            : base(usersCollectionName, rolesCollectionName)
+        { }
+
+        public IdentityCloudContext(string uri, string authKey, string database, ConnectionPolicy policy, string usersCollectionName, string rolesCollectionName)
+            : base(uri, authKey, database, policy, usersCollectionName, rolesCollectionName)
+        { }
 
     }
 
@@ -82,20 +96,25 @@ namespace ElCamino.AspNet.Identity.DocumentDB
         /// <summary>
         /// Creates a new context using specific collection names
         /// </summary>
-        /// <param name="usersCollection">The name of the user collection to use</param>
-        /// <param name="rolesCollection">The name of the role collection to use</param>
-        public IdentityCloudContext(string usersCollection, string rolesCollection) :
+        /// <param name="usersCollectionName">The name of the user collection to use</param>
+        /// <param name="rolesCollectionName">The name of the role collection to use</param>
+        public IdentityCloudContext(string usersCollectionName, string rolesCollectionName) :
             this(ConfigurationManager.AppSettings[Constants.AppSettingsKeys.DatabaseUriKey],
                 ConfigurationManager.AppSettings[Constants.AppSettingsKeys.DatabaseAuthKey],
                 ConfigurationManager.AppSettings[Constants.AppSettingsKeys.DatabaseNameKey],
-                null)
+                null, usersCollectionName, rolesCollectionName)
+        {
+            
+        }
+
+        public IdentityCloudContext(string uri, string authKey, string database, ConnectionPolicy policy = null) :
+            this(uri, authKey, database, policy, Constants.DocumentCollectionIds.UsersCollection, Constants.DocumentCollectionIds.RolesCollection) { }
+
+        public IdentityCloudContext(string uri, string authKey, string database, ConnectionPolicy policy, string usersCollection, string rolesCollection)
         {
             _userDocumentCollection = new DocumentCollection { Id = usersCollection };
             _roleDocumentCollection = new DocumentCollection { Id = rolesCollection };
-        }
 
-        public IdentityCloudContext(string uri, string authKey, string database, ConnectionPolicy policy = null)
-        {
             _client = new DocumentClient(new Uri(uri), authKey, policy, ConsistencyLevel.Session);
             InitDatabase(database);
             InitCollections();
