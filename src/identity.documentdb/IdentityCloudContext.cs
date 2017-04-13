@@ -1,15 +1,12 @@
 ﻿// MIT License Copyright 2017 (c) David Melendez. All rights reserved. See License.txt in the project root for license information.
 using Microsoft.Azure.Documents.Client;
-using Microsoft.Azure.Documents.Linq;
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using ElCamino.AspNet.Identity.DocumentDB.Model;
 using Microsoft.Azure.Documents;
 using System.Configuration;
-using System.Diagnostics;
 using System.Reflection;
 using System.IO;
 using System.Collections.ObjectModel;
@@ -50,8 +47,8 @@ namespace ElCamino.AspNet.Identity.DocumentDB
     {
         private DocumentClient _client = null;
         private Database _db = null;
-        private DocumentCollection _roleDocumentCollection = new DocumentCollection() { Id = Constants.DocumentCollectionIds.RolesCollection };
-        private DocumentCollection _userDocumentCollection = new DocumentCollection() { Id = Constants.DocumentCollectionIds.UsersCollection };
+        private DocumentCollection _roleDocumentCollection;
+        private DocumentCollection _userDocumentCollection;
         private StoredProcedure _getUserByEmailSproc = null;
         private StoredProcedure _getUserByUserNameSproc = null;
         private StoredProcedure _getUserByIdSproc = null;
@@ -80,12 +77,21 @@ namespace ElCamino.AspNet.Identity.DocumentDB
         private bool _disposed = false;
 
         public IdentityCloudContext() :
-            this(ConfigurationManager.AppSettings[Constants.AppSettingsKeys.DatabaseUriKey].ToString(),
-            ConfigurationManager.AppSettings[Constants.AppSettingsKeys.DatabaseAuthKey].ToString(),
-            ConfigurationManager.AppSettings[Constants.AppSettingsKeys.DatabaseNameKey].ToString(),
-            null)
-        {
+            this(Constants.DocumentCollectionIds.UsersCollection, Constants.DocumentCollectionIds.RolesCollection) { }
 
+        /// <summary>
+        /// Creates a new context using specific collection names
+        /// </summary>
+        /// <param name="usersCollection">The name of the user collection to use</param>
+        /// <param name="rolesCollection">The name of the role collection to use</param>
+        public IdentityCloudContext(string usersCollection, string rolesCollection) :
+            this(ConfigurationManager.AppSettings[Constants.AppSettingsKeys.DatabaseUriKey],
+                ConfigurationManager.AppSettings[Constants.AppSettingsKeys.DatabaseAuthKey],
+                ConfigurationManager.AppSettings[Constants.AppSettingsKeys.DatabaseNameKey],
+                null)
+        {
+            _userDocumentCollection = new DocumentCollection { Id = usersCollection };
+            _roleDocumentCollection = new DocumentCollection { Id = rolesCollection };
         }
 
         public IdentityCloudContext(string uri, string authKey, string database, ConnectionPolicy policy = null)
