@@ -91,7 +91,8 @@ namespace ElCamino.AspNet.Identity.DocumentDB
         private bool _disposed = false;
 
         public IdentityCloudContext() :
-            this(Constants.DocumentCollectionIds.UsersCollection, Constants.DocumentCollectionIds.RolesCollection) { }
+            this(Constants.DocumentCollectionIds.UsersCollection, Constants.DocumentCollectionIds.RolesCollection)
+        { }
 
         /// <summary>
         /// Creates a new context using specific collection names
@@ -104,11 +105,12 @@ namespace ElCamino.AspNet.Identity.DocumentDB
                 ConfigurationManager.AppSettings[Constants.AppSettingsKeys.DatabaseNameKey],
                 null, usersCollectionName, rolesCollectionName)
         {
-            
+
         }
 
         public IdentityCloudContext(string uri, string authKey, string database, ConnectionPolicy policy = null) :
-            this(uri, authKey, database, policy, Constants.DocumentCollectionIds.UsersCollection, Constants.DocumentCollectionIds.RolesCollection) { }
+            this(uri, authKey, database, policy, Constants.DocumentCollectionIds.UsersCollection, Constants.DocumentCollectionIds.RolesCollection)
+        { }
 
         public IdentityCloudContext(string uri, string authKey, string database, ConnectionPolicy policy, string usersCollection, string rolesCollection)
         {
@@ -137,12 +139,7 @@ namespace ElCamino.AspNet.Identity.DocumentDB
             Task[] tasks = new Task[2] {
             new TaskFactory().StartNew(() =>
                 {
-                    var uc = _client.CreateDocumentCollectionQuery(_db.CollectionsLink)
-                        .Where(c => c.Id == Constants.DocumentCollectionIds.UsersCollection)
-                        .ToList()
-                        .FirstOrDefault();
-                    if (uc == null)
-                    {
+
                         _userDocumentCollection.IndexingPolicy.IndexingMode = IndexingMode.Lazy;
                         _userDocumentCollection.IndexingPolicy.IncludedPaths.Add(new IncludedPath()
                         {
@@ -176,24 +173,17 @@ namespace ElCamino.AspNet.Identity.DocumentDB
                                  new HashIndex(DataType.String)
                              }
                         });
-                        var ucTask = _client.CreateDocumentCollectionAsync(_db.SelfLink, _userDocumentCollection);
+
+                        var ucTask = _client.CreateDocumentCollectionIfNotExistsAsync(_db.SelfLink, _userDocumentCollection);
                         ucTask.Wait();
-                        uc = ucTask.Result;
-                    }
+                        var uc = ucTask.Result;
                     UserDocumentCollection = uc;
                 }),
             new TaskFactory().StartNew(() =>
                 {
-                    var rc = _client.CreateDocumentCollectionQuery(_db.CollectionsLink)
-                        .Where(c => c.Id == Constants.DocumentCollectionIds.RolesCollection)
-                        .ToList()
-                        .FirstOrDefault();
-                    if (rc == null)
-                    {
-                        var rcTask = _client.CreateDocumentCollectionAsync(_db.SelfLink, _roleDocumentCollection);
+                        var rcTask = _client.CreateDocumentCollectionIfNotExistsAsync(_db.SelfLink, _roleDocumentCollection);
                         rcTask.Wait();
-                        rc = rcTask.Result;
-                    }
+                        var rc = rcTask.Result;
                     RoleDocumentCollection = rc;
                 })
             };
