@@ -1,15 +1,12 @@
 ﻿// MIT License Copyright 2017 (c) David Melendez. All rights reserved. See License.txt in the project root for license information.
 using Microsoft.Azure.Documents.Client;
-using Microsoft.Azure.Documents.Linq;
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using ElCamino.AspNet.Identity.DocumentDB.Model;
 using Microsoft.Azure.Documents;
 using System.Configuration;
-using System.Diagnostics;
 using System.Reflection;
 using System.IO;
 using System.Collections.ObjectModel;
@@ -26,6 +23,13 @@ namespace ElCamino.AspNet.Identity.DocumentDB
             : base(uri, authKey, database, policy)
         { }
 
+        public IdentityCloudContext(string usersCollectionName, string rolesCollectionName)
+            : base(usersCollectionName, rolesCollectionName)
+        { }
+
+        public IdentityCloudContext(string uri, string authKey, string database, ConnectionPolicy policy, string usersCollectionName, string rolesCollectionName)
+            : base(uri, authKey, database, policy, usersCollectionName, rolesCollectionName)
+        { }
     }
 
     public class IdentityCloudContext<TUser> : IdentityCloudContext<TUser, IdentityRole, string, IdentityUserLogin, IdentityUserRole, IdentityUserClaim> where TUser : IdentityUser
@@ -36,8 +40,15 @@ namespace ElCamino.AspNet.Identity.DocumentDB
 
         public IdentityCloudContext(string uri, string authKey, string database, ConnectionPolicy policy = null)
             : base(uri, authKey, database, policy)
-        {
-        }
+        { }
+
+        public IdentityCloudContext(string usersCollectionName, string rolesCollectionName)
+            : base(usersCollectionName, rolesCollectionName)
+        { }
+
+        public IdentityCloudContext(string uri, string authKey, string database, ConnectionPolicy policy, string usersCollectionName, string rolesCollectionName)
+            : base(uri, authKey, database, policy, usersCollectionName, rolesCollectionName)
+        { }
 
     }
 
@@ -50,8 +61,8 @@ namespace ElCamino.AspNet.Identity.DocumentDB
     {
         private DocumentClient _client = null;
         private Database _db = null;
-        private DocumentCollection _roleDocumentCollection = new DocumentCollection() { Id = Constants.DocumentCollectionIds.RolesCollection };
-        private DocumentCollection _userDocumentCollection = new DocumentCollection() { Id = Constants.DocumentCollectionIds.UsersCollection };
+        private DocumentCollection _roleDocumentCollection;
+        private DocumentCollection _userDocumentCollection;
         private StoredProcedure _getUserByEmailSproc = null;
         private StoredProcedure _getUserByUserNameSproc = null;
         private StoredProcedure _getUserByIdSproc = null;
@@ -80,16 +91,32 @@ namespace ElCamino.AspNet.Identity.DocumentDB
         private bool _disposed = false;
 
         public IdentityCloudContext() :
-            this(ConfigurationManager.AppSettings[Constants.AppSettingsKeys.DatabaseUriKey].ToString(),
-            ConfigurationManager.AppSettings[Constants.AppSettingsKeys.DatabaseAuthKey].ToString(),
-            ConfigurationManager.AppSettings[Constants.AppSettingsKeys.DatabaseNameKey].ToString(),
-            null)
+            this(Constants.DocumentCollectionIds.UsersCollection, Constants.DocumentCollectionIds.RolesCollection)
+        { }
+
+        /// <summary>
+        /// Creates a new context using specific collection names
+        /// </summary>
+        /// <param name="usersCollectionName">The name of the user collection to use</param>
+        /// <param name="rolesCollectionName">The name of the role collection to use</param>
+        public IdentityCloudContext(string usersCollectionName, string rolesCollectionName) :
+            this(ConfigurationManager.AppSettings[Constants.AppSettingsKeys.DatabaseUriKey],
+                ConfigurationManager.AppSettings[Constants.AppSettingsKeys.DatabaseAuthKey],
+                ConfigurationManager.AppSettings[Constants.AppSettingsKeys.DatabaseNameKey],
+                null, usersCollectionName, rolesCollectionName)
         {
 
         }
 
-        public IdentityCloudContext(string uri, string authKey, string database, ConnectionPolicy policy = null)
+        public IdentityCloudContext(string uri, string authKey, string database, ConnectionPolicy policy = null) :
+            this(uri, authKey, database, policy, Constants.DocumentCollectionIds.UsersCollection, Constants.DocumentCollectionIds.RolesCollection)
+        { }
+
+        public IdentityCloudContext(string uri, string authKey, string database, ConnectionPolicy policy, string usersCollection, string rolesCollection)
         {
+            _userDocumentCollection = new DocumentCollection { Id = usersCollection };
+            _roleDocumentCollection = new DocumentCollection { Id = rolesCollection };
+
             _client = new DocumentClient(new Uri(uri), authKey, policy, ConsistencyLevel.Session);
             InitDatabase(database);
             InitCollections();
@@ -112,12 +139,7 @@ namespace ElCamino.AspNet.Identity.DocumentDB
             Task[] tasks = new Task[2] {
             new TaskFactory().StartNew(() =>
                 {
-                    var uc = _client.CreateDocumentCollectionQuery(_db.CollectionsLink)
-                        .Where(c => c.Id == Constants.DocumentCollectionIds.UsersCollection)
-                        .ToList()
-                        .FirstOrDefault();
-                    if (uc == null)
-                    {
+
                         _userDocumentCollection.IndexingPolicy.IndexingMode = IndexingMode.Lazy;
                         _userDocumentCollection.IndexingPolicy.IncludedPaths.Add(new IncludedPath()
                         {
@@ -151,24 +173,17 @@ namespace ElCamino.AspNet.Identity.DocumentDB
                                  new HashIndex(DataType.String)
                              }
                         });
-                        var ucTask = _client.CreateDocumentCollectionAsync(_db.SelfLink, _userDocumentCollection);
+
+                        var ucTask = _client.CreateDocumentCollectionIfNotExistsAsync(_db.SelfLink, _userDocumentCollection);
                         ucTask.Wait();
-                        uc = ucTask.Result;
-                    }
+                        var uc = ucTask.Result;
                     UserDocumentCollection = uc;
                 }),
             new TaskFactory().StartNew(() =>
                 {
-                    var rc = _client.CreateDocumentCollectionQuery(_db.CollectionsLink)
-                        .Where(c => c.Id == Constants.DocumentCollectionIds.RolesCollection)
-                        .ToList()
-                        .FirstOrDefault();
-                    if (rc == null)
-                    {
-                        var rcTask = _client.CreateDocumentCollectionAsync(_db.SelfLink, _roleDocumentCollection);
+                        var rcTask = _client.CreateDocumentCollectionIfNotExistsAsync(_db.SelfLink, _roleDocumentCollection);
                         rcTask.Wait();
-                        rc = rcTask.Result;
-                    }
+                        var rc = rcTask.Result;
                     RoleDocumentCollection = rc;
                 })
             };
