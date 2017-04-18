@@ -171,8 +171,10 @@ namespace ElCamino.AspNet.Identity.DocumentDB
                 throw new ArgumentNullException("user");
             }
 
-            await Context.Client.DeleteDocumentAsync(user.SelfLink,
+            var result = await Context.Client.DeleteDocumentAsync(user.SelfLink,
                             Context.RequestOptions);
+            Context.SetSessionTokenIfEmpty(result.SessionToken);
+
         }
 
         public void Dispose()
@@ -205,27 +207,21 @@ namespace ElCamino.AspNet.Identity.DocumentDB
             string loginId = login.GenerateRowKeyUserLoginInfo();
 
             var result = await Context.Client.ExecuteStoredProcedureAsync<IEnumerable<dynamic>>(Context.GetUserByLoginSproc.SelfLink,
+                    Context.RequestOptions,
                     new dynamic[] { loginId });
-            if (result.Response != null)
-            {
-                Context.SetSessionTokenIfEmpty(result.SessionToken);
-                return GetUserAggregate(result.Response.ToList());
-            }
-            return null;
+            Context.SetSessionTokenIfEmpty(result.SessionToken);
+            return GetUserAggregate(result.Response.ToList());
 
         }
 
         public async Task<TUser> FindByEmailAsync(string plainEmail)
         {
             var result = await Context.Client.ExecuteStoredProcedureAsync<IEnumerable<dynamic>>(Context.GetUserByEmailSproc.SelfLink,
+               Context.RequestOptions,
                new dynamic[] { plainEmail });
 
-            if (result.Response != null)
-            {
                 Context.SetSessionTokenIfEmpty(result.SessionToken);
                 return GetUserAggregate(result.Response.ToList());
-            }
-            return null;
         }
 
         public virtual async Task<TUser> FindByIdAsync(TKey userId)
@@ -238,13 +234,10 @@ namespace ElCamino.AspNet.Identity.DocumentDB
         {
             this.ThrowIfDisposed();
             var result = await Context.Client.ExecuteStoredProcedureAsync<IEnumerable<dynamic>>(Context.GetUserByUserNameSproc.SelfLink,
+                    Context.RequestOptions,
                     new dynamic[] { userName });
-            if (result.Response != null)
-            {
-                Context.SetSessionTokenIfEmpty(result.SessionToken);
-                return await Task.FromResult<TUser>(GetUserAggregate(result.Response.ToList()));
-            }
-            return null;
+            Context.SetSessionTokenIfEmpty(result.SessionToken);
+            return await Task.FromResult<TUser>(GetUserAggregate(result.Response.ToList()));
         }
 
         public Task<int> GetAccessFailedCountAsync(TUser user)
@@ -380,15 +373,14 @@ namespace ElCamino.AspNet.Identity.DocumentDB
 
         private  async Task<TUser> GetUserAggregateAsync(string userId)
         {
-            var task = Context.Client.ExecuteStoredProcedureAsync<IEnumerable<dynamic>>(Context.GetUserByIdSproc.SelfLink,
-                new dynamic[] { userId });
-            task.Wait();
-            if (task.Result.Response != null)
-            {
-                return await Task.FromResult<TUser>(GetUserAggregate(task.Result.Response.ToList()));
-            }
-            return null;
-
+            return await Context.Client.ExecuteStoredProcedureAsync<IEnumerable<dynamic>>(Context.GetUserByIdSproc.SelfLink,
+                Context.RequestOptions,
+                new dynamic[] { userId })
+                .ContinueWith((storedProcTask) => {
+                    Context.SetSessionTokenIfEmpty(storedProcTask.Result.SessionToken);
+                    return GetUserAggregate(storedProcTask.Result.Response.ToList());
+                });
+            
         }
 
         private TUser GetUserAggregate(List<dynamic> userResults)

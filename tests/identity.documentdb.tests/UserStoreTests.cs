@@ -36,8 +36,8 @@ namespace ElCamino.AspNet.Identity.DocumentDB.Tests
                 "PhoneNumber",
                 "TwoFactorEnabled",
                 "PasswordHash",
-                "Email",
-                "EmailNone"
+                "EmailNone",
+                "PhoneNumberConfirmed"
                 };
 
         #endregion
@@ -157,6 +157,8 @@ namespace ElCamino.AspNet.Identity.DocumentDB.Tests
 
             using (UserStore<IdentityUser> store = new UserStore<IdentityUser>())
             {
+                store.Context.Client.ConnectionPolicy.RetryOptions.MaxRetryAttemptsOnThrottledRequests = 30;
+
                 using (UserManager<IdentityUser> manager = new UserManager<IdentityUser>(store))
                 {
                     var user = GenTestUser();

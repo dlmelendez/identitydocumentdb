@@ -78,6 +78,48 @@ namespace ElCamino.AspNet.Identity.DocumentDB.Tests
 
         [TestMethod]
         [TestCategory("Identity.Azure.RoleStore")]
+        public void CreateRoleSameCollection()
+        {
+            const string sameCol = "same";
+            //var ic = new IdentityCloudContext<IdentityUser>(sameCol, sameCol);
+
+            using (RoleStore<IdentityRole> store = new RoleStore<IdentityRole>(new IdentityCloudContext(sameCol, sameCol)))
+            {
+                using (RoleManager<IdentityRole> manager = new RoleManager<IdentityRole>(store))
+                {
+                    Assert.IsNotNull(store.Context.Database);
+                    var role = CreateRoleHelper(manager);
+                    WriteLineObject<IdentityRole>(role);
+
+                    var result = store.Context.Client.DeleteDocumentCollectionAsync(store.Context.UserDocumentCollection.SelfLink).Result;
+
+                }
+            }
+
+        }
+
+        [TestMethod]
+        [TestCategory("Identity.Azure.RoleStore")]
+        public void CreateQueryRoles()
+        {
+
+            using (RoleStore<IdentityRole> store = new RoleStore<IdentityRole>())
+            {
+                using (RoleManager<IdentityRole> manager = new RoleManager<IdentityRole>(store))
+                {
+                    var role = CreateRoleHelper(manager);
+                    WriteLineObject<IdentityRole>(role);
+
+                    var r = manager.Roles.AsQueryable().Where(o => o.Name == role.Name).ToList().FirstOrDefault();
+                    Assert.IsNotNull(r);
+
+                }
+            }
+
+        }
+
+        [TestMethod]
+        [TestCategory("Identity.Azure.RoleStore")]
         public void CreateRole()
         {    
             using (RoleStore<IdentityRole> store = new RoleStore<IdentityRole>())

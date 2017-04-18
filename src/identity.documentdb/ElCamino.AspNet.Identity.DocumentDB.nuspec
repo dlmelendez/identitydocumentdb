@@ -12,7 +12,8 @@
     <description>$description$</description>
     <releaseNotes>
       Release $version$ This project is an open source plugin to ASP.NET Identity framework using Azure DocumentDB.
-      * Updating references.
+      * Adding configurable collection names.
+      * Updating DocumentDB client reference.
     </releaseNotes>
     <copyright>Copyright 2017</copyright>
     <tags>ASP.NET Identity 2.0 Azure DocumentDB Storage MVC UserStore RoleStore UserManager</tags>

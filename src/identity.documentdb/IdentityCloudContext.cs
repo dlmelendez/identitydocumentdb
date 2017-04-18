@@ -19,17 +19,15 @@ namespace ElCamino.AspNet.Identity.DocumentDB
             : base()
         { }
 
-        public IdentityCloudContext(string uri, string authKey, string database, ConnectionPolicy policy = null)
-            : base(uri, authKey, database, policy)
+        public IdentityCloudContext(string uri, string authKey, string database, ConnectionPolicy policy = null,
+            string usersCollectionName = null, string rolesCollectionName = null)
+            : base(uri, authKey, database, policy, usersCollectionName, rolesCollectionName)
         { }
 
         public IdentityCloudContext(string usersCollectionName, string rolesCollectionName)
             : base(usersCollectionName, rolesCollectionName)
         { }
 
-        public IdentityCloudContext(string uri, string authKey, string database, ConnectionPolicy policy, string usersCollectionName, string rolesCollectionName)
-            : base(uri, authKey, database, policy, usersCollectionName, rolesCollectionName)
-        { }
     }
 
     public class IdentityCloudContext<TUser> : IdentityCloudContext<TUser, IdentityRole, string, IdentityUserLogin, IdentityUserRole, IdentityUserClaim> where TUser : IdentityUser
@@ -38,17 +36,15 @@ namespace ElCamino.AspNet.Identity.DocumentDB
             : base()
         { }
 
-        public IdentityCloudContext(string uri, string authKey, string database, ConnectionPolicy policy = null)
-            : base(uri, authKey, database, policy)
+        public IdentityCloudContext(string uri, string authKey, string database, ConnectionPolicy policy = null,
+            string usersCollectionName = null, string rolesCollectionName = null)
+            : base(uri, authKey, database, policy, usersCollectionName, rolesCollectionName)
         { }
 
         public IdentityCloudContext(string usersCollectionName, string rolesCollectionName)
             : base(usersCollectionName, rolesCollectionName)
         { }
 
-        public IdentityCloudContext(string uri, string authKey, string database, ConnectionPolicy policy, string usersCollectionName, string rolesCollectionName)
-            : base(uri, authKey, database, policy, usersCollectionName, rolesCollectionName)
-        { }
 
     }
 
@@ -108,14 +104,12 @@ namespace ElCamino.AspNet.Identity.DocumentDB
 
         }
 
-        public IdentityCloudContext(string uri, string authKey, string database, ConnectionPolicy policy = null) :
-            this(uri, authKey, database, policy, Constants.DocumentCollectionIds.UsersCollection, Constants.DocumentCollectionIds.RolesCollection)
-        { }
-
-        public IdentityCloudContext(string uri, string authKey, string database, ConnectionPolicy policy, string usersCollection, string rolesCollection)
+        public IdentityCloudContext(string uri, string authKey, string database, ConnectionPolicy policy = null, 
+            string usersCollection = null, 
+            string rolesCollection = null)
         {
-            _userDocumentCollection = new DocumentCollection { Id = usersCollection };
-            _roleDocumentCollection = new DocumentCollection { Id = rolesCollection };
+            _userDocumentCollection = new DocumentCollection { Id = usersCollection?? Constants.DocumentCollectionIds.UsersCollection };
+            _roleDocumentCollection = new DocumentCollection { Id = rolesCollection?? Constants.DocumentCollectionIds.RolesCollection };
 
             _client = new DocumentClient(new Uri(uri), authKey, policy, ConsistencyLevel.Session);
             InitDatabase(database);
@@ -177,14 +171,14 @@ namespace ElCamino.AspNet.Identity.DocumentDB
                         var ucTask = _client.CreateDocumentCollectionIfNotExistsAsync(_db.SelfLink, _userDocumentCollection);
                         ucTask.Wait();
                         var uc = ucTask.Result;
-                    UserDocumentCollection = uc;
+                        UserDocumentCollection = uc;
                 }),
             new TaskFactory().StartNew(() =>
                 {
                         var rcTask = _client.CreateDocumentCollectionIfNotExistsAsync(_db.SelfLink, _roleDocumentCollection);
                         rcTask.Wait();
                         var rc = rcTask.Result;
-                    RoleDocumentCollection = rc;
+                        RoleDocumentCollection = rc;
                 })
             };
             Task.WaitAll(tasks);
