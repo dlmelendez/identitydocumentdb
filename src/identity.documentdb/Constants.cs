@@ -21,8 +21,12 @@ namespace ElCamino.AspNet.Identity.DocumentDB
 
         public static class DocumentCollectionIds
         {
-            public const string RolesCollection = "Roles";
-            public const string UsersCollection = "Users";
+            public static string RolesCollection = WebConfigurationManager.AppSettings["RolesCollection"];
+            public static string UsersCollection = WebConfigurationManager.AppSettings["UsersCollection"];
+            static DocumentCollectionIds() {
+                RolesCollection = string.IsNullOrWhiteSpace(RolesCollection) ? "Roles" : RolesCollection;
+                UsersCollection = string.IsNullOrWhiteSpace(UsersCollection) ? "Users" : UsersCollection;
+            }
         }
 
         public static class RowKeyConstants
