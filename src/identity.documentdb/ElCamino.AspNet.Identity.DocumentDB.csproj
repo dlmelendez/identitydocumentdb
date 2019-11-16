@@ -1,30 +1,48 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
-<Project ToolsVersion="12.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <Description>Azure CosmosDB/DocumentDB Provider for ASP.NET Identity 2.0 framework. Requires a DocumentDB instance with a Session connection policy. Important! This package should be upgraded to the ElCamino.AspNetCore.Identity.CosmosDB package. Check here https://github.com/dlmelendez/identitycosmosdb for migration information.</Description>
+    <Copyright>Copyright ©  2019 David Melendez, MIT License</Copyright>
+    <AssemblyTitle>Azure Table Storage Provider for ASP.NET Identity Core</AssemblyTitle>
+    <Authors>David Melendez</Authors>
+    <TargetFramework>net452</TargetFramework>
+
+    <RootNamespace>ElCamino.AspNet.Identity.DocumentDB</RootNamespace>
+    <AssemblyName>ElCamino.AspNet.Identity.DocumentDB</AssemblyName>
+    <AssemblyOriginatorKeyFile>../../tools/Key.snk</AssemblyOriginatorKeyFile>
+    <SignAssembly>true</SignAssembly>
+    <PublicSign Condition=" '$(OS)' != 'Windows_NT' ">true</PublicSign>
+    <PackageId>ElCamino.AspNet.Identity.DocumentDB</PackageId>
+    <PackageTags>ASP.NET Identity 2.0 Azure DocumentDB CosmosDB MVC UserStore RoleStore UserManager</PackageTags>
+    <PackageReleaseNotes>
+      Azure CosmosDB/DocumentDB Provider for ASP.NET Identity 2.0 framework. Requires a DocumentDB instance with a Session connection policy.
+      Important! This package should be upgraded to the ElCamino.AspNetCore.Identity.CosmosDB package. Check here https://github.com/dlmelendez/identitycosmosdb for migration information.
+    </PackageReleaseNotes>
+    <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
+    <RepositoryType>git</RepositoryType>
+    <RepositoryUrl>https://github.com/dlmelendez/identitydocumentdb.git</RepositoryUrl>
+    <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
+    <Version>1.3.1</Version>
+    <PackageProjectUrl>https://github.com/dlmelendez/identitydocumentdb</PackageProjectUrl>
+    <PackageIcon>projectNugetPic.png</PackageIcon>
+    <DebugType>Full</DebugType>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <IncludeSymbols>true</IncludeSymbols>
+    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
+    <SignAssembly>true</SignAssembly>
+    <AssemblyOriginatorKeyFile>../../tools/Key.snk</AssemblyOriginatorKeyFile>
+  </PropertyGroup>
+
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{F1F21307-0F10-42DA-B01D-AD9884AD900D}</ProjectGuid>
-    <OutputType>Library</OutputType>
-    <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>ElCamino.AspNet.Identity.DocumentDB</RootNamespace>
-    <AssemblyName>ElCamino.AspNet.Identity.DocumentDB</AssemblyName>
-    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
-    <FileAlignment>512</FileAlignment>
-    <SccProjectName>SAK</SccProjectName>
-    <SccLocalPath>SAK</SccLocalPath>
-    <SccAuxPath>SAK</SccAuxPath>
-    <SccProvider>SAK</SccProvider>
-    <TargetFrameworkProfile />
-    <NuGetPackageImportStamp>
-    </NuGetPackageImportStamp>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
     <OutputPath>bin\Debug\</OutputPath>
-    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <DefineConstants>TRACE;DEBUG;net45</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
@@ -32,92 +50,49 @@
     <DebugType>pdbonly</DebugType>
     <Optimize>true</Optimize>
     <OutputPath>bin\Release\</OutputPath>
-    <DefineConstants>TRACE</DefineConstants>
+    <DefineConstants>TRACE;net45</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Signed|AnyCPU'">
     <OutputPath>bin\Signed\</OutputPath>
-    <DefineConstants>TRACE</DefineConstants>
+    <DefineConstants>TRACE;net45</DefineConstants>
     <Optimize>true</Optimize>
     <DebugType>pdbonly</DebugType>
     <PlatformTarget>AnyCPU</PlatformTarget>
     <ErrorReport>prompt</ErrorReport>
     <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
-    <SignAssembly>true</SignAssembly>
-    <AssemblyOriginatorKeyFile>..\..\tools\key.snk</AssemblyOriginatorKeyFile>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="Microsoft.AspNet.Identity.Core, Version=2.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
-      <HintPath>..\..\packages\Microsoft.AspNet.Identity.Core.2.2.1\lib\net45\Microsoft.AspNet.Identity.Core.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
-    <Reference Include="Microsoft.Azure.Documents.Client, Version=1.13.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
-      <HintPath>..\..\packages\Microsoft.Azure.DocumentDB.1.13.1\lib\net45\Microsoft.Azure.Documents.Client.dll</HintPath>
-    </Reference>
-    <Reference Include="Newtonsoft.Json, Version=9.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
-      <HintPath>..\..\packages\Newtonsoft.Json.9.0.1\lib\net45\Newtonsoft.Json.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
-    <Reference Include="System" />
-    <Reference Include="System.Configuration" />
-    <Reference Include="System.Core" />
-    <Reference Include="System.Web.Extensions" />
-    <Reference Include="System.Xml.Linq" />
-    <Reference Include="System.Data.DataSetExtensions" />
-    <Reference Include="Microsoft.CSharp" />
-    <Reference Include="System.Data" />
-    <Reference Include="System.Xml" />
-  </ItemGroup>
-  <ItemGroup>
-    <Compile Include="Constants.cs" />
-    <Compile Include="Helpers\BaseKeyHelper.cs" />
-    <Compile Include="Helpers\HashKeyHelper.cs" />
-    <Compile Include="Helpers\KeyHelper.cs" />
-    <Compile Include="Helpers\UriEncodeKeyHelper.cs" />
-    <Compile Include="IdentityCloudContext.cs" />
-    <Compile Include="IdentityResources.Designer.cs">
-      <AutoGen>True</AutoGen>
-      <DesignTime>True</DesignTime>
-      <DependentUpon>IdentityResources.resx</DependentUpon>
-    </Compile>
-    <Compile Include="Model\IdentityRole.cs" />
-    <Compile Include="Model\IdentityUser.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Model\IdentityUserClaim.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Model\IdentityUserLogin.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Model\IdentityUserRole.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Model\IGenerateKeys.cs" />
-    <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="RoleStore.cs" />
-    <Compile Include="UserStore.cs">
-      <SubType>Code</SubType>
-    </Compile>
+    <PackageReference Include="Microsoft.AspNet.Identity.Core" Version="2.2.2" />
+    <PackageReference Include="Microsoft.CSharp" Version="4.3.0" />
+    <PackageReference Include="Newtonsoft.Json" Version="10.0.2" />
+    <PackageReference Include="Microsoft.Azure.DocumentDB" Version="1.13.1" />
+
   </ItemGroup>
   <ItemGroup>
     <None Include="app.config">
       <SubType>Designer</SubType>
     </None>
-    <None Include="ElCamino.AspNet.Identity.DocumentDB.nuspec">
-      <SubType>Designer</SubType>
-    </None>
-    <None Include="packages.config">
-      <SubType>Designer</SubType>
-    </None>
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="IdentityResources.resx">
-      <Generator>ResXFileCodeGenerator</Generator>
+    <Folder Include="Properties\" />
+  </ItemGroup>
+  <ItemGroup>
+    <Reference Include="System.Configuration" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Update="IdentityResources.resx">
+      <Generator>PublicResXFileCodeGenerator</Generator>
       <LastGenOutput>IdentityResources.Designer.cs</LastGenOutput>
-      <SubType>Designer</SubType>
     </EmbeddedResource>
+  </ItemGroup>
+  <ItemGroup>
+    <None Update="IdentityResources.Designer.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>IdentityResources.resx</DependentUpon>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="StoredProcs\getUserByEmail_sproc.js" />
@@ -131,25 +106,20 @@
   <ItemGroup>
     <EmbeddedResource Include="StoredProcs\getUserByLogin_sproc.js" />
   </ItemGroup>
-  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <ItemGroup>
+    <None Include="projectNugetPic.png" Pack="true" PackagePath="\" />
+  </ItemGroup>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
   <Target Name="BeforeBuild">
   </Target>
   -->
   <Target Name="AfterBuild" Condition=" '$(Configuration)' == 'Signed' ">
-    <Delete Files="$(TargetDir)*.nupkg" />
+    <!--<Delete Files="$(TargetDir)*.nupkg" />-->
     <!-- Create NuGet Package -->
-    <Exec Command="$(SolutionDir)vendor\NuGet\Nuget.exe pack $(ProjectPath) -Prop Configuration=$(Configuration) -Symbols -OutputDirectory $(TargetDir)" />
-    <Delete Files="$(TargetDir)*.zip" />
+    <!--<Exec Command="$(SolutionDir)3rdParty\NuGet\Nuget.exe pack $(ProjectPath) -Prop Configuration=$(Configuration) -Symbols -OutputDirectory $(TargetDir)" />
+    <Delete Files="$(TargetDir)*.zip" />-->
     <!-- 7-zip dlls-->
-    <Exec Command="$(SolutionDir)vendor\7-zip\7z.exe a $(TargetDir)$(TargetName)_$(Configuration).zip $(TargetPath) $(TargetDir)$(TargetName).pdb" />
-  </Target>
-  <Import Project="..\..\packages\Microsoft.Azure.DocumentDB.1.13.1\build\Microsoft.Azure.DocumentDB.targets" Condition="Exists('..\..\packages\Microsoft.Azure.DocumentDB.1.13.1\build\Microsoft.Azure.DocumentDB.targets')" />
-  <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
-    <PropertyGroup>
-      <ErrorText>This project references NuGet package(s) that are missing on this computer. Use NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
-    </PropertyGroup>
-    <Error Condition="!Exists('..\..\packages\Microsoft.Azure.DocumentDB.1.13.1\build\Microsoft.Azure.DocumentDB.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\..\packages\Microsoft.Azure.DocumentDB.1.13.1\build\Microsoft.Azure.DocumentDB.targets'))" />
+    <!--<Exec Command="$(SolutionDir)3rdParty\7-zip\7z.exe a $(TargetDir)$(TargetName)_$(Configuration).zip $(TargetPath) $(TargetDir)$(TargetName).pdb" />-->
   </Target>
 </Project>
