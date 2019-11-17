@@ -1,7 +1,9 @@
 ElCamino.AspNet.Identity.DocumentDB
 ==================
 
-Azure DocumentDB Provider for ASP.NET Identity 2.0 framework. Get the latest release from NuGet http://www.nuget.org/packages/ElCamino.AspNet.Identity.DocumentDB/)
+Azure DocumentDB Provider for ASP.NET Identity 2.0 framework. 
+
+**Important!** This package should be upgraded to the ElCamino.AspNetCore.Identity.CosmosDB package. Check here https://github.com/dlmelendez/identitycosmosdb for migration information.
 
   Release 1.2
   * Updated references and copyright information.
