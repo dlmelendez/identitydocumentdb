@@ -67,7 +67,7 @@
     <PackageReference Include="Microsoft.AspNet.Identity.Core" Version="2.2.2" />
     <PackageReference Include="Microsoft.CSharp" Version="4.3.0" />
     <PackageReference Include="Newtonsoft.Json" Version="10.0.2" />
-    <PackageReference Include="Microsoft.Azure.DocumentDB" Version="1.13.1" />
+    <PackageReference Include="Microsoft.Azure.DocumentDB" Version="1.13.4" />
 
   </ItemGroup>
   <ItemGroup>

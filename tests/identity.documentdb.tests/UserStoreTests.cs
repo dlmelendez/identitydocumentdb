@@ -22,23 +22,7 @@ namespace ElCamino.AspNet.Identity.DocumentDB.Tests
     {
         #region Static and Const Members
         public static string DefaultUserPassword;
-        private static IdentityUser User = null;
-        private static List<string> NoCreateUserTests =
-            new List<string>() { 
-                "AddUserLogin",
-                "SecurityStamp", 
-                "CreateUser",
-                "AddUserRole",
-                "AddUserClaim",
-                "UpdateApplicationUser",
-                "AddRemoveUserClaim",
-                "LockoutEnabled",
-                "PhoneNumber",
-                "TwoFactorEnabled",
-                "PasswordHash",
-                "EmailNone",
-                "PhoneNumberConfirmed"
-                };
+        
 
         #endregion
 
@@ -67,14 +51,7 @@ namespace ElCamino.AspNet.Identity.DocumentDB.Tests
 
             DefaultUserPassword = Guid.NewGuid().ToString();
 
-            //--Changes to speed up tests that don't require a new user, sharing a static user
-
-            if(User == null &&
-                !NoCreateUserTests.Any(t => t == TestContext.TestName))
-            {
-                CreateUser();
-            }
-            //--
+            
         }
         #endregion
 
@@ -146,13 +123,13 @@ namespace ElCamino.AspNet.Identity.DocumentDB.Tests
 
         [TestMethod]
         [TestCategory("Identity.Azure.UserStore")]
-        public void CreateUser()
+        public async Task CreateUser()
         {
-            User = CreateTestUser();
-            WriteLineObject<IdentityUser>(User);
+            var user = await CreateTestUser();
+            WriteLineObject<IdentityUser>(user);
         }
 
-        private IdentityUser CreateTestUser(bool createPassword = true, bool createEmail = true)
+        private async Task<IdentityUser> CreateTestUser(bool createPassword = true, bool createEmail = true)
         {
 
             using (UserStore<IdentityUser> store = new UserStore<IdentityUser>())
@@ -167,17 +144,16 @@ namespace ElCamino.AspNet.Identity.DocumentDB.Tests
                         user.Email = null;
                     }
                     var taskUser = createPassword ? 
-                        manager.CreateAsync(user, DefaultUserPassword) :
-                        manager.CreateAsync(user);
-                    taskUser.Wait();
-                    Assert.IsTrue(taskUser.Result.Succeeded, string.Concat(taskUser.Result.Errors));
+                        await manager.CreateAsync(user, DefaultUserPassword) :
+                        await manager.CreateAsync(user);
+                    Assert.IsTrue(taskUser.Succeeded, string.Concat(taskUser.Errors));
 
-                    for (int i = 0; i < 2; i++)
-                    {
-                        AddUserClaimHelper(manager, user, GenAdminClaim());
-                        AddUserLoginHelper(manager, user, GenGoogleLogin());
-                        AddUserRoleHelper(manager, user, string.Format("{0}_{1}", Constants.AccountRoles.AccountTestUserRole, Guid.NewGuid().ToString("N")));
-                    }
+                    //for (int i = 0; i < 2; i++)
+                    //{
+                    //    await AddUserClaimHelper(manager, user, GenAdminClaim());
+                    //    AddUserLoginHelper(manager, user, GenGoogleLogin());
+                    //    AddUserRoleHelper(manager, user, string.Format("{0}_{1}", Constants.AccountRoles.AccountTestUserRole, Guid.NewGuid().ToString("N")));
+                    //}
 
                     try
                     {
@@ -189,10 +165,10 @@ namespace ElCamino.AspNet.Identity.DocumentDB.Tests
                         agg.ValidateAggregateException<ArgumentException>();
                     }
 
-                    Thread.Sleep(2000);
-                    var getUserTask = manager.FindByIdAsync(user.Id);
-                    getUserTask.Wait();
-                    return getUserTask.Result;
+                    await Task.Delay(500);
+                    var getUserTask = await manager.FindByIdAsync(user.Id);
+                    
+                    return getUserTask;
                 }
             }
         }
@@ -214,7 +190,7 @@ namespace ElCamino.AspNet.Identity.DocumentDB.Tests
 
                     for (int i = 0; i < 5; i++)
                     {
-                        AddUserClaimHelper(manager, user, GenAdminClaim());
+                        AddUserClaimHelper(manager, user, GenAdminClaim()).Wait();
                         AddUserLoginHelper(manager, user, GenGoogleLogin());
                         AddUserRoleHelper(manager, user, string.Format("{0}_{1}", Constants.AccountRoles.AccountTestUserRole, Guid.NewGuid().ToString("N")));
                     }
@@ -326,13 +302,13 @@ namespace ElCamino.AspNet.Identity.DocumentDB.Tests
 
         [TestMethod]
         [TestCategory("Identity.Azure.UserStore")]
-        public void ChangeUserName()
+        public async Task ChangeUserName()
         {
             using (UserStore<IdentityUser> store = new UserStore<IdentityUser>())
             {
                 using (UserManager<IdentityUser> manager = new UserManager<IdentityUser>(store))
                 {
-                    var firstUser = CreateTestUser();
+                    var firstUser = await CreateTestUser();
                     TestContext.WriteLine("{0}", "Original User");
                     WriteLineObject<IdentityUser>(firstUser);
                     string originalPlainUserName = firstUser.UserName;
@@ -367,12 +343,11 @@ namespace ElCamino.AspNet.Identity.DocumentDB.Tests
                     Assert.IsTrue(changedUser.Logins.All(r => r.UserId == changedUser.Id.ToString()), "Logins partition keys are not equal to the new user id");
 
                     //Check email
-                    var taskFindEmail = manager.FindByEmailAsync(changedUser.Email);
-                    taskFindEmail.Wait();
-                    Assert.IsNotNull(taskFindEmail.Result, "User not found by new email.");
+                    var taskFindEmail = await manager.FindByEmailAsync(changedUser.Email);
+                    Assert.IsNotNull(taskFindEmail, "User not found by new email.");
 
                     //Check logins
-                    foreach (var log in taskFindEmail.Result.Logins)
+                    foreach (var log in taskFindEmail.Logins)
                     {
                         var taskFindLogin = manager.FindAsync(new UserLoginInfo(log.LoginProvider, log.ProviderKey));
                         taskFindLogin.Wait();
@@ -394,34 +369,34 @@ namespace ElCamino.AspNet.Identity.DocumentDB.Tests
 
         [TestMethod]
         [TestCategory("Identity.Azure.UserStore")]
-        public void FindUserByEmail()
+        public async Task FindUserByEmail()
         {
             using (UserStore<IdentityUser> store = new UserStore<IdentityUser>())
             {
                 using (UserManager<IdentityUser> manager = new UserManager<IdentityUser>(store))
                 {
-                    var user = User;
+                    var user = await CreateTestUser();
                     WriteLineObject<IdentityUser>(user);
 
                     DateTime start = DateTime.UtcNow;
-                    var findUserTask = manager.FindByEmailAsync(user.Email);
-                    findUserTask.Wait();
+                    await Task.Delay(2000);
+                    var findUserTask = await manager.FindByEmailAsync(user.Email);
                     TestContext.WriteLine("FindByEmailAsync: {0} seconds", (DateTime.UtcNow - start).TotalSeconds);
 
-                    Assert.AreEqual<string>(user.Email, findUserTask.Result.Email, "Found user email not equal");
+                    Assert.AreEqual<string>(user.Email, findUserTask.Email, "Found user email not equal");
                 }
             }
         }
 
         [TestMethod]
         [TestCategory("Identity.Azure.UserStore")]
-        public void FindUserById()
+        public async Task FindUserById()
         {
             using (UserStore<IdentityUser> store = new UserStore<IdentityUser>())
             {
                 using (UserManager<IdentityUser> manager = new UserManager<IdentityUser>(store))
                 {
-                    var user = User;
+                    var user = await CreateTestUser();
                     DateTime start = DateTime.UtcNow;
                     var findUserTask = manager.FindByIdAsync(user.Id);
                     findUserTask.Wait();
@@ -434,33 +409,32 @@ namespace ElCamino.AspNet.Identity.DocumentDB.Tests
 
         [TestMethod]
         [TestCategory("Identity.Azure.UserStore")]
-        public void FindUserByName()
+        public async Task FindUserByName()
         {
             using (UserStore<IdentityUser> store = new UserStore<IdentityUser>())
             {
                 using (UserManager<IdentityUser> manager = new UserManager<IdentityUser>(store))
                 {
-                    var user = User;
+                    var user = await CreateTestUser();
                     WriteLineObject<IdentityUser>(user);
                     DateTime start = DateTime.UtcNow;
-                    var findUserTask = manager.FindByNameAsync(user.UserName);
-                    findUserTask.Wait();
+                    var findUserTask = await manager.FindByNameAsync(user.UserName);
                     TestContext.WriteLine("FindByNameAsync: {0} seconds", (DateTime.UtcNow - start).TotalSeconds);
 
-                    Assert.AreEqual<string>(user.UserName, findUserTask.Result.UserName, "Found user UserName not equal");
+                    Assert.AreEqual<string>(user.UserName, findUserTask.UserName, "Found user UserName not equal");
                 }
             }
         }
 
         [TestMethod]
         [TestCategory("Identity.Azure.UserStore")]
-        public void AddUserLogin()
+        public async Task AddUserLogin()
         {
             using (UserStore<IdentityUser> store = new UserStore<IdentityUser>(new IdentityCloudContext<IdentityUser>()))
             {
                 using (UserManager<IdentityUser> manager = new UserManager<IdentityUser>(store))
                 {
-                    var user = CreateTestUser(false);
+                    var user = await CreateTestUser(false);
                     WriteLineObject<IdentityUser>(user);
                     AddUserLoginHelper(manager, user, GenGoogleLogin());
                 }
@@ -587,15 +561,16 @@ namespace ElCamino.AspNet.Identity.DocumentDB.Tests
 
         [TestMethod]
         [TestCategory("Identity.Azure.UserStore")]
-        public void AddUserRole()
+        public async Task AddUserRole()
         {
+            var user = await CreateTestUser();
             using (UserStore<IdentityUser> store = new UserStore<IdentityUser>(new IdentityCloudContext<IdentityUser>()))
             {
                 using (UserManager<IdentityUser> manager = new UserManager<IdentityUser>(store))
                 {
                     string strUserRole = string.Format("{0}_{1}", Constants.AccountRoles.AccountTestUserRole, Guid.NewGuid().ToString("N"));
-                    WriteLineObject<IdentityUser>(User);
-                    AddUserRoleHelper(manager, User, strUserRole);
+                    WriteLineObject<IdentityUser>(user);
+                    AddUserRoleHelper(manager, user, strUserRole);
                 }
             }
         }
@@ -626,41 +601,34 @@ namespace ElCamino.AspNet.Identity.DocumentDB.Tests
 
         [TestMethod]
         [TestCategory("Identity.Azure.UserStore")]
-        public void AddRemoveUserRole()
+        public async Task AddRemoveUserRole()
         {
             string roleName = string.Format("{0}_{1}", Constants.AccountRoles.AccountTestAdminRole, Guid.NewGuid().ToString("N"));
 
             using (RoleStore<IdentityRole> rstore = new RoleStore<IdentityRole>())
             {
-                var taskAdmin = rstore.CreateAsync(new IdentityRole(roleName));
-                taskAdmin.Wait();
-                var adminRole = rstore.FindByNameAsync(roleName);
-                adminRole.Wait();
+                await rstore.CreateAsync(new IdentityRole(roleName));
+                var adminRole = await rstore.FindByNameAsync(roleName);
             }
 
             using (UserStore<IdentityUser> store = new UserStore<IdentityUser>())
             {
                 using (UserManager<IdentityUser> manager = new UserManager<IdentityUser>(store))
                 {
-                    var user = User;
+                    var user = await CreateTestUser();
                     WriteLineObject<IdentityUser>(user);
-                    var userRoleTask = manager.AddToRoleAsync(user.Id, roleName);
-                    userRoleTask.Wait();
-                    Assert.IsTrue(userRoleTask.Result.Succeeded, string.Concat(userRoleTask.Result.Errors));
+                    var userRoleTask = await manager.AddToRoleAsync(user.Id, roleName);
+                    Assert.IsTrue(userRoleTask.Succeeded, string.Concat(userRoleTask.Errors));
 
-                    var rolesTask = manager.GetRolesAsync(user.Id);
-                    rolesTask.Wait();
-                    Assert.IsTrue(rolesTask.Result.Contains(roleName), "Role not found");
+                    var rolesTask = await manager.GetRolesAsync(user.Id);
+                    Assert.IsTrue(rolesTask.Contains(roleName), "Role not found");
 
-                    var roles2Task = manager.IsInRoleAsync(user.Id, roleName);
-                    roles2Task.Wait();
-                    Assert.IsTrue(roles2Task.Result, "Role not found");
+                    var roles2Task = await manager.IsInRoleAsync(user.Id, roleName);
+                    Assert.IsTrue(roles2Task, "Role not found");
 
-                    var userRemoveTask = manager.RemoveFromRoleAsync(user.Id, roleName);
-                    userRemoveTask.Wait();
-                    var rolesTask2 = manager.GetRolesAsync(user.Id);
-                    rolesTask2.Wait();
-                    Assert.IsFalse(rolesTask2.Result.Contains(roleName), "Role not removed.");
+                    var userRemoveTask = await manager.RemoveFromRoleAsync(user.Id, roleName);
+                    var rolesTask2 = await manager.GetRolesAsync(user.Id);
+                    Assert.IsFalse(rolesTask2.Contains(roleName), "Role not removed.");
 
                     try
                     {
@@ -718,23 +686,22 @@ namespace ElCamino.AspNet.Identity.DocumentDB.Tests
 
         [TestMethod]
         [TestCategory("Identity.Azure.UserStore")]
-        public void IsUserInRole()
+        public async Task IsUserInRole()
         {
             using (UserStore<IdentityUser> store = new UserStore<IdentityUser>())
             {
                 using (UserManager<IdentityUser> manager = new UserManager<IdentityUser>(store))
                 {
-                    var user = User;
+                    var user = await CreateTestUser();
                     WriteLineObject<IdentityUser>(user);
                     string roleName = string.Format("{0}_{1}", Constants.AccountRoles.AccountTestUserRole, Guid.NewGuid().ToString("N"));
 
                     AddUserRoleHelper(manager, user, roleName);
 
                     DateTime start = DateTime.UtcNow;
-                    var roles2Task = manager.IsInRoleAsync(user.Id, roleName);
-                    roles2Task.Wait();
+                    var roles2Task = await manager.IsInRoleAsync(user.Id, roleName);
                     TestContext.WriteLine("IsInRoleAsync: {0} seconds", (DateTime.UtcNow - start).TotalSeconds);
-                    Assert.IsTrue(roles2Task.Result, "Role not found");
+                    Assert.IsTrue(roles2Task, "Role not found");
 
                    
                     try
@@ -754,53 +721,48 @@ namespace ElCamino.AspNet.Identity.DocumentDB.Tests
 
         [TestMethod]
         [TestCategory("Identity.Azure.UserStore")]
-        public void AddUserClaim()
+        public async Task AddUserClaim()
         {
+            var user = await CreateTestUser();
             using (UserStore<IdentityUser> store = new UserStore<IdentityUser>(new IdentityCloudContext<IdentityUser>()))
             {
                 using (UserManager<IdentityUser> manager = new UserManager<IdentityUser>(store))
                 {
-                    WriteLineObject<IdentityUser>(User);
-                    AddUserClaimHelper(manager, User, GenUserClaim());
+                    WriteLineObject<IdentityUser>(user);
+                    await AddUserClaimHelper(manager, user, GenUserClaim());
                 }
             }
         }
 
-        private void AddUserClaimHelper(UserManager<IdentityUser> manager, IdentityUser user, Claim claim)
+        private async Task AddUserClaimHelper(UserManager<IdentityUser> manager, IdentityUser user, Claim claim)
         {
-            var userClaimTask = manager.AddClaimAsync(user.Id, claim);
-            userClaimTask.Wait();
-            Assert.IsTrue(userClaimTask.Result.Succeeded, string.Concat(userClaimTask.Result.Errors));
-            var claimsTask = manager.GetClaimsAsync(user.Id);
-            claimsTask.Wait();
-            Assert.IsTrue(claimsTask.Result.Any(c => c.Value == claim.Value & c.ValueType == claim.ValueType), "Claim not found");
+            var userClaimTask = await manager.AddClaimAsync(user.Id, claim);
+            Assert.IsTrue(userClaimTask.Succeeded, string.Concat(userClaimTask.Errors));
+            var claimsTask = await manager.GetClaimsAsync(user.Id);
+            Assert.IsTrue(claimsTask.Any(c => c.Value == claim.Value & c.ValueType == claim.ValueType), "Claim not found");
         }
 
         [TestMethod]
         [TestCategory("Identity.Azure.UserStore")]
-        public void AddRemoveUserClaim()
+        public async Task AddRemoveUserClaim()
         {
             using (UserStore<IdentityUser> store = new UserStore<IdentityUser>(new IdentityCloudContext<IdentityUser>()))
             {
                 using (UserManager<IdentityUser> manager = new UserManager<IdentityUser>(store))
                 {
-                    var user = User;
+                    var user = await CreateTestUser();
                     WriteLineObject<IdentityUser>(user);
                     Claim claim = GenAdminClaim();
-                    var userClaimTask = manager.AddClaimAsync(user.Id, claim);
-                    userClaimTask.Wait();
-                    Assert.IsTrue(userClaimTask.Result.Succeeded, string.Concat(userClaimTask.Result.Errors));
-                    var claimsTask = manager.GetClaimsAsync(user.Id);
-                    claimsTask.Wait();
-                    Assert.IsTrue(claimsTask.Result.Any(c => c.Value == claim.Value & c.ValueType == claim.ValueType), "Claim not found");
+                    var userClaimTask = await manager.AddClaimAsync(user.Id, claim);
+                    Assert.IsTrue(userClaimTask.Succeeded, string.Concat(userClaimTask.Errors));
+                    var claimsTask = await manager.GetClaimsAsync(user.Id);
+                    Assert.IsTrue(claimsTask.Any(c => c.Value == claim.Value & c.ValueType == claim.ValueType), "Claim not found");
 
 
-                    var userRemoveClaimTask = manager.RemoveClaimAsync(user.Id, claim);
-                    userRemoveClaimTask.Wait();
-                    Assert.IsTrue(userClaimTask.Result.Succeeded, string.Concat(userClaimTask.Result.Errors));
-                    var claimsTask2 = manager.GetClaimsAsync(user.Id);
-                    claimsTask2.Wait();
-                    Assert.IsTrue(!claimsTask2.Result.Any(c => c.Value == claim.Value & c.ValueType == claim.ValueType), "Claim not removed");
+                    var userRemoveClaimTask = await manager.RemoveClaimAsync(user.Id, claim);
+                    Assert.IsTrue(userClaimTask.Succeeded, string.Concat(userClaimTask.Errors));
+                    var claimsTask2 = await manager.GetClaimsAsync(user.Id);
+                    Assert.IsTrue(!claimsTask2.Any(c => c.Value == claim.Value & c.ValueType == claim.ValueType), "Claim not removed");
 
                     try
                     {

@@ -158,7 +158,7 @@ namespace ElCamino.AspNet.Identity.DocumentDB
 
             var doc = await Context.Client.CreateDocumentAsync(Context.UserDocumentCollection.DocumentsLink, user
                 , Context.RequestOptions, true);
-            Context.SetSessionTokenIfEmpty(doc.SessionToken);
+            Context.SetSessionToken(doc.SessionToken);
             JsonConvert.PopulateObject(doc.Resource.ToString(), user);
 
         }
@@ -173,7 +173,7 @@ namespace ElCamino.AspNet.Identity.DocumentDB
 
             var result = await Context.Client.DeleteDocumentAsync(user.SelfLink,
                             Context.RequestOptions);
-            Context.SetSessionTokenIfEmpty(result.SessionToken);
+            Context.SetSessionToken(result.SessionToken);
 
         }
 
@@ -639,7 +639,7 @@ namespace ElCamino.AspNet.Identity.DocumentDB
             
             var result = await Context.Client.ReplaceDocumentAsync(user.SelfLink, user,
                     Context.RequestOptions);
-            Context.SetSessionTokenIfEmpty(result.SessionToken);
+            Context.SetSessionToken(result.SessionToken);
             user = Activator.CreateInstance<TUser>();
             JsonConvert.PopulateObject(result.Resource.ToString(), user);
 

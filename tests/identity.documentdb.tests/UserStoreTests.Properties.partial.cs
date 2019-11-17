@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using System.Security.Claims;
 using System.Linq;
 using ElCamino.AspNet.Identity.DocumentDB.Model;
+using System.Threading.Tasks;
 
 namespace ElCamino.AspNet.Identity.DocumentDB.Tests
 {
@@ -14,7 +15,7 @@ namespace ElCamino.AspNet.Identity.DocumentDB.Tests
     {
         [TestMethod]
         [TestCategory("Identity.Azure.UserStore.Properties")]
-        public void AccessFailedCount()
+        public async Task AccessFailedCount()
         {
             using (UserStore<IdentityUser> store = new UserStore<IdentityUser>())
             {
@@ -22,19 +23,16 @@ namespace ElCamino.AspNet.Identity.DocumentDB.Tests
                 {
                     manager.MaxFailedAccessAttemptsBeforeLockout = 2;
                     
-                    var user = CreateTestUser();
-                    var taskUser = manager.GetAccessFailedCountAsync(user.Id);
-                    taskUser.Wait();
-                    Assert.AreEqual<int>(user.AccessFailedCount, taskUser.Result, "AccessFailedCount not equal");
+                    var user = await CreateTestUser();
+                    var taskUser = await manager.GetAccessFailedCountAsync(user.Id);
+                    Assert.AreEqual<int>(user.AccessFailedCount, taskUser, "AccessFailedCount not equal");
 
-                    var taskAccessFailed =  manager.AccessFailedAsync(user.Id);
-                    taskAccessFailed.Wait();
-                    Assert.IsTrue(taskAccessFailed.Result.Succeeded, string.Concat(taskAccessFailed.Result.Errors));
+                    var taskAccessFailed =  await manager.AccessFailedAsync(user.Id);
+                    Assert.IsTrue(taskAccessFailed.Succeeded, string.Concat(taskAccessFailed.Errors));
 
-                    user = manager.FindById(user.Id);
-                    var taskAccessReset = manager.ResetAccessFailedCountAsync(user.Id);
-                    taskAccessReset.Wait();
-                    Assert.IsTrue(taskAccessReset.Result.Succeeded, string.Concat(taskAccessReset.Result.Errors));
+                    user = await manager.FindByIdAsync(user.Id);
+                    var taskAccessReset = await manager.ResetAccessFailedCountAsync(user.Id);
+                    Assert.IsTrue(taskAccessReset.Succeeded, string.Concat(taskAccessReset.Errors));
 
                     try
                     {
@@ -70,25 +68,22 @@ namespace ElCamino.AspNet.Identity.DocumentDB.Tests
             }
         }
 
-        private void SetValidateEmail(UserManager<IdentityUser> manager, 
+        private async Task SetValidateEmail(UserManager<IdentityUser> manager, 
             UserStore<IdentityUser> store,
             IdentityUser user, 
             string strNewEmail)
         {
             string originalEmail = user.Email;
-            var taskUserSet = manager.SetEmailAsync(user.Id, strNewEmail);
-            taskUserSet.Wait();
-            Assert.IsTrue(taskUserSet.Result.Succeeded, string.Concat(taskUserSet.Result.Errors));
+            var taskUserSet = await manager.SetEmailAsync(user.Id, strNewEmail);
+            Assert.IsTrue(taskUserSet.Succeeded, string.Concat(taskUserSet.Errors));
 
-            var taskUser = manager.GetEmailAsync(user.Id);
-            taskUser.Wait();
-            Assert.AreEqual<string>(strNewEmail, taskUser.Result, "GetEmailAsync: Email not equal");
+            var taskUser = await manager.GetEmailAsync(user.Id);
+            Assert.AreEqual<string>(strNewEmail, taskUser, "GetEmailAsync: Email not equal");
 
             if (!string.IsNullOrWhiteSpace(strNewEmail))
             {
-                var taskFind = manager.FindByEmailAsync(strNewEmail);
-                taskFind.Wait();
-                Assert.AreEqual<string>(strNewEmail, taskFind.Result.Email, "FindByEmailAsync: Email not equal");
+                var taskFind = await manager.FindByEmailAsync(strNewEmail);
+                Assert.AreEqual<string>(strNewEmail, taskFind.Email, "FindByEmailAsync: Email not equal");
             }
             else
             {
@@ -102,26 +97,26 @@ namespace ElCamino.AspNet.Identity.DocumentDB.Tests
             //Should not find old by old email.
             if (!string.IsNullOrWhiteSpace(originalEmail))
             {
-                var taskFind = manager.FindByEmailAsync(originalEmail);
-                taskFind.Wait();
-                Assert.IsNull(taskFind.Result, "FindByEmailAsync: Old email should not yield a find result.");
+                var taskFind = await manager.FindByEmailAsync(originalEmail);
+                Assert.IsNull(taskFind, "FindByEmailAsync: Old email should not yield a find result.");
             }
 
         }
 
         [TestMethod]
         [TestCategory("Identity.Azure.UserStore.Properties")]
-        public void EmailNone()
+        public async Task EmailNone()
         {
             using (UserStore<IdentityUser> store = new UserStore<IdentityUser>())
             {
                 using (UserManager<IdentityUser> manager = new UserManager<IdentityUser>(store))
                 {
-                    var user = CreateTestUser(false, false);
+                    var user = await CreateTestUser(false, false);
+                    await Task.Delay(1000);
                     string strNewEmail = string.Format("{0}@hotmail.com", Guid.NewGuid().ToString("N"));
-                    SetValidateEmail(manager, store, user, strNewEmail);
+                    await SetValidateEmail(manager, store, user, strNewEmail);
 
-                    SetValidateEmail(manager, store, user, string.Empty);
+                    await SetValidateEmail(manager, store, user, string.Empty);
 
                 }
             }
@@ -129,16 +124,16 @@ namespace ElCamino.AspNet.Identity.DocumentDB.Tests
 
         [TestMethod]
         [TestCategory("Identity.Azure.UserStore.Properties")]
-        public void Email()
+        public async Task Email()
         {
             using (UserStore<IdentityUser> store = new UserStore<IdentityUser>())
             {
                 using (UserManager<IdentityUser> manager = new UserManager<IdentityUser>(store))
                 {
-                    var user = User;
-
+                    var user = await CreateTestUser();
+                    await Task.Delay(2000);
                     string strNewEmail = string.Format("{0}@gmail.com", Guid.NewGuid().ToString("N"));
-                    SetValidateEmail(manager, store, user, strNewEmail);
+                    await SetValidateEmail(manager, store, user, strNewEmail);
 
                     try
                     {
@@ -176,28 +171,25 @@ namespace ElCamino.AspNet.Identity.DocumentDB.Tests
 
         [TestMethod]
         [TestCategory("Identity.Azure.UserStore.Properties")]
-        public void EmailConfirmed()
+        public async Task EmailConfirmed()
         {
             using (UserStore<IdentityUser> store = new UserStore<IdentityUser>())
             {
                 using (UserManager<IdentityUser> manager = new UserManager<IdentityUser>(store))
                 {
                     manager.UserTokenProvider = new EmailTokenProvider<IdentityUser>();
-                    var user = CreateTestUser();
+                    var user = await CreateTestUser();
 
-                    var taskUserSet = manager.GenerateEmailConfirmationTokenAsync(user.Id);
-                    taskUserSet.Wait();
-                    Assert.IsFalse(string.IsNullOrWhiteSpace(taskUserSet.Result), "GenerateEmailConfirmationToken failed.");
-                    string token = taskUserSet.Result;
+                    var taskUserSet = await manager.GenerateEmailConfirmationTokenAsync(user.Id);
+                    Assert.IsFalse(string.IsNullOrWhiteSpace(taskUserSet), "GenerateEmailConfirmationToken failed.");
+                    string token = taskUserSet;
 
-                    var taskConfirm = manager.ConfirmEmailAsync(user.Id, token);
-                    taskConfirm.Wait();
-                    Assert.IsTrue(taskConfirm.Result.Succeeded, string.Concat(taskConfirm.Result.Errors));
+                    var taskConfirm = await manager.ConfirmEmailAsync(user.Id, token);
+                    Assert.IsTrue(taskConfirm.Succeeded, string.Concat(taskConfirm.Errors));
 
-                    user = manager.FindByEmail(user.Email);
-                    var taskConfirmGet = store.GetEmailConfirmedAsync(user);
-                    taskConfirmGet.Wait();
-                    Assert.IsTrue(taskConfirmGet.Result, "Email not confirmed");
+                    user = await manager.FindByEmailAsync(user.Email);
+                    var taskConfirmGet = await store.GetEmailConfirmedAsync(user);
+                    Assert.IsTrue(taskConfirmGet, "Email not confirmed");
 
                     try
                     {
@@ -225,7 +217,7 @@ namespace ElCamino.AspNet.Identity.DocumentDB.Tests
 
         [TestMethod]
         [TestCategory("Identity.Azure.UserStore.Properties")]
-        public void LockoutEnabled()
+        public async Task LockoutEnabled()
         {
             using (UserStore<IdentityUser> store = new UserStore<IdentityUser>())
             {
@@ -233,16 +225,14 @@ namespace ElCamino.AspNet.Identity.DocumentDB.Tests
                 {
                     manager.UserTokenProvider = new EmailTokenProvider<IdentityUser>();
 
-                    var user = User;
+                    var user = await CreateTestUser();
 
-                    var taskLockoutSet = manager.SetLockoutEnabledAsync(user.Id, true);
-                    taskLockoutSet.Wait();
-                    Assert.IsTrue(taskLockoutSet.Result.Succeeded, string.Concat(taskLockoutSet.Result.Errors));
+                    var taskLockoutSet = await manager.SetLockoutEnabledAsync(user.Id, true);
+                    Assert.IsTrue(taskLockoutSet.Succeeded, string.Concat(taskLockoutSet.Errors));
 
                     DateTimeOffset offSet = new DateTimeOffset(DateTime.UtcNow.AddMinutes(3));
-                    var taskDateSet = manager.SetLockoutEndDateAsync(user.Id, offSet);
-                    taskDateSet.Wait();
-                    Assert.IsTrue(taskDateSet.Result.Succeeded, string.Concat(taskDateSet.Result.Errors));
+                    var taskDateSet = await manager.SetLockoutEndDateAsync(user.Id, offSet);
+                    Assert.IsTrue(taskDateSet.Succeeded, string.Concat(taskDateSet.Errors));
 
                     var taskEnabledGet = manager.GetLockoutEnabledAsync(user.Id);
                     taskEnabledGet.Wait();
@@ -299,22 +289,20 @@ namespace ElCamino.AspNet.Identity.DocumentDB.Tests
 
         [TestMethod]
         [TestCategory("Identity.Azure.UserStore.Properties")]
-        public void PhoneNumber()
+        public async Task PhoneNumber()
         {
             using (UserStore<IdentityUser> store = new UserStore<IdentityUser>())
             {
                 using (UserManager<IdentityUser> manager = new UserManager<IdentityUser>(store))
                 {
-                    var user = User;
+                    var user = await CreateTestUser();
 
                     string strNewPhoneNumber = "542-887-3434";
-                    var taskPhoneNumberSet = manager.SetPhoneNumberAsync(user.Id, strNewPhoneNumber);
-                    taskPhoneNumberSet.Wait();
-                    Assert.IsTrue(taskPhoneNumberSet.Result.Succeeded, string.Concat(taskPhoneNumberSet.Result.Errors));
+                    var taskPhoneNumberSet = await manager.SetPhoneNumberAsync(user.Id, strNewPhoneNumber);
+                    Assert.IsTrue(taskPhoneNumberSet.Succeeded, string.Concat(taskPhoneNumberSet.Errors));
 
-                    var taskUser = manager.GetPhoneNumberAsync(user.Id);
-                    taskUser.Wait();
-                    Assert.AreEqual<string>(strNewPhoneNumber, taskUser.Result, "PhoneNumber not equal");
+                    var taskUser = await manager.GetPhoneNumberAsync(user.Id);
+                    Assert.AreEqual<string>(strNewPhoneNumber, taskUser, "PhoneNumber not equal");
 
                     try
                     {
@@ -351,28 +339,25 @@ namespace ElCamino.AspNet.Identity.DocumentDB.Tests
 
         [TestMethod]
         [TestCategory("Identity.Azure.UserStore.Properties")]
-        public void PhoneNumberConfirmed()
+        public async Task PhoneNumberConfirmed()
         {
             using (UserStore<IdentityUser> store = new UserStore<IdentityUser>())
             {
                 using (UserManager<IdentityUser> manager = new UserManager<IdentityUser>(store))
                 {
                     manager.UserTokenProvider = new PhoneNumberTokenProvider<IdentityUser>();
-                    var user = CreateTestUser();
+                    var user = await CreateTestUser();
                     string strNewPhoneNumber = "425-555-1111";
-                    var taskUserSet = manager.GenerateChangePhoneNumberTokenAsync(user.Id, strNewPhoneNumber);
-                    taskUserSet.Wait();
-                    Assert.IsFalse(string.IsNullOrWhiteSpace(taskUserSet.Result), "GeneratePhoneConfirmationToken failed.");
-                    string token = taskUserSet.Result;
+                    var taskUserSet = await manager.GenerateChangePhoneNumberTokenAsync(user.Id, strNewPhoneNumber);
+                    Assert.IsFalse(string.IsNullOrWhiteSpace(taskUserSet), "GeneratePhoneConfirmationToken failed.");
+                    string token = taskUserSet;
 
-                    var taskConfirm = manager.ChangePhoneNumberAsync(user.Id, strNewPhoneNumber, token);
-                    taskConfirm.Wait();
-                    Assert.IsTrue(taskConfirm.Result.Succeeded, string.Concat(taskConfirm.Result.Errors));
+                    var taskConfirm = await manager.ChangePhoneNumberAsync(user.Id, strNewPhoneNumber, token);
+                    Assert.IsTrue(taskConfirm.Succeeded, string.Concat(taskConfirm.Errors));
 
-                    user = manager.FindByEmail(user.Email);
-                    var taskConfirmGet = store.GetPhoneNumberConfirmedAsync(user);
-                    taskConfirmGet.Wait();
-                    Assert.IsTrue(taskConfirmGet.Result, "Phone not confirmed");
+                    user = await manager.FindByEmailAsync(user.Email);
+                    var taskConfirmGet = await store.GetPhoneNumberConfirmedAsync(user);
+                    Assert.IsTrue(taskConfirmGet, "Phone not confirmed");
 
                     try
                     {
@@ -400,22 +385,20 @@ namespace ElCamino.AspNet.Identity.DocumentDB.Tests
 
         [TestMethod]
         [TestCategory("Identity.Azure.UserStore.Properties")]
-        public void TwoFactorEnabled()
+        public async Task TwoFactorEnabled()
         {
             using (UserStore<IdentityUser> store = new UserStore<IdentityUser>())
             {
                 using (UserManager<IdentityUser> manager = new UserManager<IdentityUser>(store))
                 {
-                    var user = User;
+                    var user = await CreateTestUser();
 
                     bool twoFactorEnabled = true;
-                    var taskTwoFactorEnabledSet = manager.SetTwoFactorEnabledAsync(user.Id, twoFactorEnabled);
-                    taskTwoFactorEnabledSet.Wait();
-                    Assert.IsTrue(taskTwoFactorEnabledSet.Result.Succeeded, string.Concat(taskTwoFactorEnabledSet.Result.Errors));
+                    var taskTwoFactorEnabledSet = await manager.SetTwoFactorEnabledAsync(user.Id, twoFactorEnabled);
+                    Assert.IsTrue(taskTwoFactorEnabledSet.Succeeded, string.Concat(taskTwoFactorEnabledSet.Errors));
 
-                    var taskUser = manager.GetTwoFactorEnabledAsync(user.Id);
-                    taskUser.Wait();
-                    Assert.AreEqual<bool>(twoFactorEnabled, taskUser.Result, "TwoFactorEnabled not true");
+                    var taskUser = await manager.GetTwoFactorEnabledAsync(user.Id);
+                    Assert.AreEqual<bool>(twoFactorEnabled, taskUser, "TwoFactorEnabled not true");
 
                     try
                     {
@@ -443,26 +426,23 @@ namespace ElCamino.AspNet.Identity.DocumentDB.Tests
 
         [TestMethod]
         [TestCategory("Identity.Azure.UserStore.Properties")]
-        public void PasswordHash()
+        public async Task PasswordHash()
         {
             using (UserStore<IdentityUser> store = new UserStore<IdentityUser>())
             {
                 using (UserManager<IdentityUser> manager = new UserManager<IdentityUser>(store))
                 {
-                    var user = User;
+                    var user = await CreateTestUser();
                     string passwordPlain = Guid.NewGuid().ToString("N");
                     string passwordHash = manager.PasswordHasher.HashPassword(passwordPlain);
 
-                    var taskUserSet = store.SetPasswordHashAsync(user, passwordHash);
-                    taskUserSet.Wait();
+                    await store.SetPasswordHashAsync(user, passwordHash);
 
-                    var taskHasHash = manager.HasPasswordAsync(user.Id);
-                    taskHasHash.Wait();
-                    Assert.IsTrue(taskHasHash.Result, "PasswordHash not set");
+                    var taskHasHash = await manager.HasPasswordAsync(user.Id);
+                    Assert.IsTrue(taskHasHash, "PasswordHash not set");
 
-                    var taskUser = store.GetPasswordHashAsync(user);
-                    taskUser.Wait();
-                    Assert.AreEqual<string>(passwordHash, taskUser.Result, "PasswordHash not equal");
+                    var taskUser = await store.GetPasswordHashAsync(user);
+                    Assert.AreEqual<string>(passwordHash, taskUser, "PasswordHash not equal");
                     user.PasswordHash = passwordHash;
                     try
                     {
@@ -519,21 +499,19 @@ namespace ElCamino.AspNet.Identity.DocumentDB.Tests
 
         [TestMethod]
         [TestCategory("Identity.Azure.UserStore.Properties")]
-        public void SecurityStamp()
+        public async Task SecurityStamp()
         {
             using (UserStore<IdentityUser> store = new UserStore<IdentityUser>())
             {
                 using (UserManager<IdentityUser> manager = new UserManager<IdentityUser>(store))
                 {
-                    var user = CreateTestUser();
+                    var user = await CreateTestUser();
 
-                    var taskUser = manager.GetSecurityStampAsync(user.Id);
-                    taskUser.Wait();
-                    Assert.AreEqual<string>(user.SecurityStamp, taskUser.Result, "SecurityStamp not equal");
+                    var taskUser = await manager.GetSecurityStampAsync(user.Id);
+                    Assert.AreEqual<string>(user.SecurityStamp, taskUser, "SecurityStamp not equal");
 
                     string strNewSecurityStamp = Guid.NewGuid().ToString("N");
-                    var taskUserSet = store.SetSecurityStampAsync(user, strNewSecurityStamp);
-                    taskUserSet.Wait();
+                    await store.SetSecurityStampAsync(user, strNewSecurityStamp);
 
                     try
                     {

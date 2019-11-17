@@ -10,6 +10,7 @@ using Microsoft.Azure.Documents.Linq;
 using System.Linq;
 using System.Threading;
 using System.Configuration;
+using System.Threading.Tasks;
 
 namespace ElCamino.AspNet.Identity.DocumentDB.Tests
 {
@@ -78,9 +79,9 @@ namespace ElCamino.AspNet.Identity.DocumentDB.Tests
 
         [TestMethod]
         [TestCategory("Identity.Azure.RoleStore")]
-        public void CreateRoleSameCollection()
+        public async Task CreateRoleSameCollection()
         {
-            const string sameCol = "same";
+            const string sameCol = "ur";
             //var ic = new IdentityCloudContext<IdentityUser>(sameCol, sameCol);
 
             using (RoleStore<IdentityRole> store = new RoleStore<IdentityRole>(new IdentityCloudContext(sameCol, sameCol)))
@@ -91,7 +92,7 @@ namespace ElCamino.AspNet.Identity.DocumentDB.Tests
                     var role = CreateRoleHelper(manager);
                     WriteLineObject<IdentityRole>(role);
 
-                    var result = store.Context.Client.DeleteDocumentCollectionAsync(store.Context.UserDocumentCollection.SelfLink).Result;
+                    var result = await store.Context.Client.DeleteDocumentCollectionAsync(store.Context.UserDocumentCollection.SelfLink);
 
                 }
             }

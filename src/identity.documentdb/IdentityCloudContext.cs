@@ -129,59 +129,51 @@ namespace ElCamino.AspNet.Identity.DocumentDB
         }
 
         private void InitCollections()
-        {
-            Task[] tasks = new Task[2] {
-            new TaskFactory().StartNew(() =>
-                {
+        {           
+            _userDocumentCollection.IndexingPolicy.IndexingMode = IndexingMode.Lazy;
+            _userDocumentCollection.IndexingPolicy.IncludedPaths.Add(new IncludedPath()
+            {
+                    Path = @"/",
+                    Indexes= new Collection<Index>
+                    {
+                        new HashIndex(DataType.String)
+                    }
+            });
+            _userDocumentCollection.IndexingPolicy.IncludedPaths.Add(new IncludedPath()
+            {
+                Path = @"/""Email""/?",
+                    Indexes= new Collection<Index>
+                    {
+                        new HashIndex(DataType.String)
+                    }
+            });
+            _userDocumentCollection.IndexingPolicy.IncludedPaths.Add(new IncludedPath()
+            {
+                    Path = @"/""UserName""/?",
+                    Indexes= new Collection<Index>
+                    {
+                        new HashIndex(DataType.String)
+                    }
+            });
+            _userDocumentCollection.IndexingPolicy.IncludedPaths.Add(new IncludedPath()
+            {
+                Path = @"/""UserId""/?",
+                    Indexes= new Collection<Index>
+                    {
+                        new HashIndex(DataType.String)
+                    }
+            });
 
-                        _userDocumentCollection.IndexingPolicy.IndexingMode = IndexingMode.Lazy;
-                        _userDocumentCollection.IndexingPolicy.IncludedPaths.Add(new IncludedPath()
-                        {
-                             Path = @"/",
-                             Indexes= new Collection<Index>
-                             {
-                                 new HashIndex(DataType.String)
-                             }
-                        });
-                        _userDocumentCollection.IndexingPolicy.IncludedPaths.Add(new IncludedPath()
-                        {
-                            Path = @"/""Email""/?",
-                             Indexes= new Collection<Index>
-                             {
-                                 new HashIndex(DataType.String)
-                             }
-                        });
-                        _userDocumentCollection.IndexingPolicy.IncludedPaths.Add(new IncludedPath()
-                        {
-                             Path = @"/""UserName""/?",
-                             Indexes= new Collection<Index>
-                             {
-                                 new HashIndex(DataType.String)
-                             }
-                        });
-                        _userDocumentCollection.IndexingPolicy.IncludedPaths.Add(new IncludedPath()
-                        {
-                            Path = @"/""UserId""/?",
-                             Indexes= new Collection<Index>
-                             {
-                                 new HashIndex(DataType.String)
-                             }
-                        });
-
-                        var ucTask = _client.CreateDocumentCollectionIfNotExistsAsync(_db.SelfLink, _userDocumentCollection);
-                        ucTask.Wait();
-                        var uc = ucTask.Result;
-                        UserDocumentCollection = uc;
-                }),
-            new TaskFactory().StartNew(() =>
-                {
-                        var rcTask = _client.CreateDocumentCollectionIfNotExistsAsync(_db.SelfLink, _roleDocumentCollection);
-                        rcTask.Wait();
-                        var rc = rcTask.Result;
-                        RoleDocumentCollection = rc;
-                })
-            };
-            Task.WaitAll(tasks);
+            var ucTask = _client.CreateDocumentCollectionIfNotExistsAsync(_db.SelfLink, _userDocumentCollection);
+            ucTask.Wait();
+            var uc = ucTask.Result;
+            UserDocumentCollection = uc;
+                
+            var rcTask = _client.CreateDocumentCollectionIfNotExistsAsync(_db.SelfLink, _roleDocumentCollection);
+            rcTask.Wait();
+            var rc = rcTask.Result;
+            RoleDocumentCollection = rc;
+               
         }
 
         private void InitStoredProcs()
@@ -363,6 +355,11 @@ namespace ElCamino.AspNet.Identity.DocumentDB
             {
                 _sessionToken = tokenNew;
             }
+        }
+
+        public void SetSessionToken(string tokenNew)
+        {
+            _sessionToken = tokenNew;
         }
 
         public DocumentCollection RoleDocumentCollection
